@@ -2,7 +2,18 @@ import { DataTypes, Model } from "sequelize";
 
 export default (sequelize) => {
   class Dependency extends Model {
-    static associate(models) {}
+    static associate(models) {
+
+      Dependency.belongsTo(models.Speedboat, {
+        foreignKey: "speedboat_id",
+        as: "speedboat",
+      });
+
+      Dependency.belongsTo(models.Speedboat, {
+        foreignKey: "depends_on_speedboat_id",
+        as: "dependsOnSpeedboat",
+      });
+    }
   }
 
   Dependency.init(
