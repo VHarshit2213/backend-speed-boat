@@ -21,6 +21,13 @@ export default (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true, // user might not have uploaded a picture yet
       },
+      role: {
+        type: DataTypes.ENUM(
+          "admin",
+          "user"
+        ),
+        defaultValue:"user",
+      },
 
       password: { type: DataTypes.STRING, allowNull: false },
     },

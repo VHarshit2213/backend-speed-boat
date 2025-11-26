@@ -3,8 +3,9 @@ import * as ctrl from "../controllers/speedboat.controller.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { validate } from "../middlewares/validate.js";
 import { createSpeedboatSchema, updateSpeedboatSchema } from "../validators/speedboat.validator.js";
-
+import { requireAuth} from '../middlewares/auth.js'
 const router = Router();
+router.use(requireAuth);
 
 router.post("/", validate(createSpeedboatSchema), asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));

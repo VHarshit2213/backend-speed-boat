@@ -16,7 +16,7 @@ export async function register({ fullName, email, mobile, password }) {
   // Check if user exists (manual validation before hitting DB constraint)
   const exists = await User.findOne({
     where: {
-      [Op.or]: [{ email }, { mobile }],
+      [Op.or]: [{ email }],
     },
   });
 

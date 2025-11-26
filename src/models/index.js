@@ -15,7 +15,9 @@ import ReflectionModel from "./reflection.model.js";
 const sequelize = new Sequelize(env.DB_URL, {
   dialect: "postgres",
   logging: false,
-  dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
+  dialectOptions: {
+    ssl: false, // 
+  }
 });
 
 // Initialize models
@@ -28,7 +30,7 @@ const models = {
   Milestone: MilestoneModel(sequelize),
   NextAction: NextActionModel(sequelize),
   Reflection: ReflectionModel(sequelize),
- };
+};
 
 // Apply associations
 Object.values(models).forEach((model) => {

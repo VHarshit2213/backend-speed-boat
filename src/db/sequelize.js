@@ -6,7 +6,7 @@ export async function connectPostgres() {
     console.log("✅ Postgres connected successfully");
 
     // Sync all tables
-    // await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: true });
     // console.log("✅ All tables created or updated according to models");
   } catch (err) {
     console.error("❌ Unable to connect to Postgres:", err);

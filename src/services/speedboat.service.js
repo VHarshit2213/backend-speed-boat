@@ -269,7 +269,7 @@ export async function refreshMilestoneStatuses(speedboatId) {
     }
     const due = dayjs(m.due_date);
     if (due.isAfter(now, "day")) {
-      m.status = "on-track";
+      m.status = "on-track";123
     } else {
       const daysOver = now.diff(due, "day");
       if (daysOver >= 3 && daysOver <= 7) m.status = "at-risk";
