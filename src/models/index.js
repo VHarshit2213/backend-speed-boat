@@ -10,6 +10,7 @@ import KPIModel from "./kpi.model.js";
 import MilestoneModel from "./milestone.model.js";
 import NextActionModel from "./nextAction.model.js";
 import ReflectionModel from "./reflection.model.js";
+import StatusHistoryModel from "./statusHistory.model.js";
 
 // Init Sequelize
 const sequelize = new Sequelize(env.DB_URL, {
@@ -30,6 +31,7 @@ const models = {
   Milestone: MilestoneModel(sequelize),
   NextAction: NextActionModel(sequelize),
   Reflection: ReflectionModel(sequelize),
+  StatusHistory: StatusHistoryModel(sequelize),
 };
 
 // Apply associations

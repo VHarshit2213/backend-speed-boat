@@ -7,6 +7,7 @@ import milestoneRoutes from "./milestone.routes.js";
 import nextActionRoutes from "./nextAction.routes.js";
 import reflectionRoutes from "./reflection.routes.js";
 import dependencyRoutes from "./dependency.routes.js";
+import statusHistoryRoutes from "./statusHistory.routes.js";
 const router = Router();
 
 router.use('/auth', authRoutes);
@@ -17,6 +18,7 @@ router.use("/milestones", milestoneRoutes);
 router.use("/next-actions", nextActionRoutes);
 router.use("/reflections", reflectionRoutes);
 router.use("/dependencies", dependencyRoutes);
+router.use("/speedboat", statusHistoryRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
