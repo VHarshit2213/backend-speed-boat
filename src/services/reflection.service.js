@@ -1,4 +1,5 @@
 import models from "../models/index.js";
+import { touchSpeedboat } from "./speedboat.service.js";
 const { Reflection, Speedboat } = models;
 
 export async function createReflection({ speedboat_id, achievements, challenges, learnings, next_actions, needs }) {
@@ -8,7 +9,9 @@ export async function createReflection({ speedboat_id, achievements, challenges,
     err.status = 404;
     throw err;
   }
-  return Reflection.create({ speedboat_id, achievements, challenges, learnings, next_actions, needs });
+  const r = await Reflection.create({ speedboat_id, achievements, challenges, learnings, next_actions, needs });
+  await touchSpeedboat(speedboat_id);
+  return r;
 }
 
 export async function listReflections({ page = 1, limit = 25, speedboat_id }) {
@@ -36,9 +39,15 @@ export async function updateReflection(id, updates) {
     throw err;
   }
   await r.update(updates);
+  await touchSpeedboat(r.speedboat_id);
   return r;
 }
 
 export async function deleteReflection(id) {
-  await Reflection.destroy({ where: { id } });
+  const r = await Reflection.findByPk(id);
+  if (r) {
+    const speedboatId = r.speedboat_id;
+    await Reflection.destroy({ where: { id } });
+    await touchSpeedboat(speedboatId);
+  }
 }

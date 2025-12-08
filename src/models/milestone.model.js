@@ -15,12 +15,16 @@ export default (sequelize) => {
     {
       id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
       speedboat_id: { type: DataTypes.UUID, allowNull: false },
-      title: { type: DataTypes.TEXT, allowNull: false },
+      title: { type: DataTypes.STRING, allowNull: false },
       due_date: DataTypes.DATE,
       status: { type: DataTypes.STRING(20), defaultValue: "pending" },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
     },
-    { sequelize, modelName: "Milestone", tableName: "milestones", timestamps: false }
+    { sequelize, modelName: "Milestone", tableName: "milestones", timestamps: true, createdAt: "created_at", updatedAt: "updated_at", }
   );
 
   return Milestone;

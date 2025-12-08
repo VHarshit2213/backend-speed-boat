@@ -150,12 +150,6 @@ export async function resetPassword({ token, newPassword }) {
     throw err;
   }
 
-  if (newPassword.length < 12) {
-    const err = new Error("Password must be at least 12 characters");
-    err.status = 400;
-    throw err;
-  }
-
   // 1. Verify token
   let decoded;
   try {

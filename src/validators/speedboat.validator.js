@@ -25,16 +25,16 @@ const nextActionSchema = z.object({
 });
 
 export const createSpeedboatSchema = z.object({
-  name: z.string().min(1),
+  name: z.string(),
   purpose: z.string().optional().nullable(),
-  mission: z.string().optional().nullable(),
+  mission: z.string().optional(),
   captain: z.string().optional().nullable(),
   sponsor: z.string().optional().nullable(),
   mentor: z.string().optional().nullable(),
   health: z.enum(["green","yellow","red"]).optional(),
   progress: z.number().min(0).max(100).optional(),
   manual_health_override: z.boolean().optional(),
-  crew: z.array(z.string()).optional(),
+  crew: z.array(z.object({ name: z.string(), email: z.string().email().optional().nullable() })).optional(),
   kpis: z.array(kpiSchema).optional(),
   milestones: z.array(milestoneSchema).optional(),
   nextActions: z.array(nextActionSchema).optional(),

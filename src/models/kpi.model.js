@@ -19,14 +19,16 @@ export default (sequelize) => {
         defaultValue: DataTypes.UUIDV4,
       },
       speedboat_id: { type: DataTypes.UUID, allowNull: false },
-      name: { type: DataTypes.TEXT, allowNull: false },
+      name: { type: DataTypes.STRING, allowNull: false },
       baseline: DataTypes.DECIMAL,
       target: DataTypes.DECIMAL,
       current: DataTypes.DECIMAL,
-      unit: DataTypes.TEXT,
+      unit: DataTypes.STRING,
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+
     },
-    { sequelize, modelName: "KPI", tableName: "kpis", timestamps: false }
+    { sequelize, modelName: "KPI", tableName: "kpis", timestamps: true,createdAt: "created_at", updatedAt: "updated_at", }
   );
 
   return KPI;

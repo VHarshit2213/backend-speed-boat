@@ -12,7 +12,7 @@ const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/speedboat', speedboarRoutes);
-router.use("/api/crew", crewRoutes);
+router.use("/crew", crewRoutes);
 router.use("/kpis", kpiRoutes);
 router.use("/milestones", milestoneRoutes);
 router.use("/next-actions", nextActionRoutes);

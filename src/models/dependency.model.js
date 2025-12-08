@@ -7,11 +7,13 @@ export default (sequelize) => {
       Dependency.belongsTo(models.Speedboat, {
         foreignKey: "speedboat_id",
         as: "speedboat",
+        onDelete: "CASCADE"
       });
 
       Dependency.belongsTo(models.Speedboat, {
         foreignKey: "depends_on_speedboat_id",
         as: "dependsOnSpeedboat",
+        onDelete: "CASCADE"
       });
     }
   }

@@ -25,13 +25,19 @@ export default (sequelize) => {
       details: { type: DataTypes.TEXT },
       kpi_ids: { type: DataTypes.ARRAY(DataTypes.UUID), defaultValue: [] },
       created_by: { type: DataTypes.UUID },
-      created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+      created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      updated_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
     },
     {
       sequelize,
       modelName: "StatusHistory",
       tableName: "status_history",
-      timestamps: false
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     }
   );
 

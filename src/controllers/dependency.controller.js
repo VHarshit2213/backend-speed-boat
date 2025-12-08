@@ -33,7 +33,7 @@ export const getById = async (req, res) => {
 export const remove = async (req, res) => {
   try {
     await dependencyService.deleteDependency(req.params.id);
-    return ApiResponse.noContent(res);
+    return ApiResponse.ok(res);
   } catch (err) {
     return ApiResponse.error(res, err.message);
   }

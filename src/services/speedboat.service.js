@@ -15,15 +15,15 @@ const {
 /**
  * Health barometer logic per uploaded spec.
  * Rules summarized:
- *  - Green: progress >= 60 AND no overdue milestones AND KPIs trending toward target
- *  - Yellow: progress 30-59 OR 1 milestone at-risk OR minor KPI drift
- *  - Red: progress < 30 OR multiple overdue milestones OR KPI moving away OR manual captain flag
+ *  - On Track: progress >= 60 AND no overdue milestones AND KPIs trending toward target
+ *  - Pending: progress 30-59 OR 1 milestone at-risk OR minor KPI drift
+ *  - At Risk: progress < 30 OR multiple overdue milestones OR KPI moving away OR manual captain flag
  */
 export async function computeHealthForSpeedboat(speedboat) {
   // speedboat may be plain object or sequelize instance with includes
   const progress = Number(speedboat.progress || 0);
   const manualOverride = !!speedboat.manual_health_override;
-  if (manualOverride) return speedboat.health || "yellow";
+  if (manualOverride) return speedboat.health || "Pending";
 
   // fetch KPIs & milestones if not present
   const [kpis, milestones] = await Promise.all([
@@ -70,10 +70,10 @@ export async function computeHealthForSpeedboat(speedboat) {
   }
 
   // Decide health
-  if (progress >= 60 && overdueCount === 0 && kpiAway === 0) return "green";
-  if (progress < 30 || overdueCount >= 2 || kpiAway > 0) return "red";
-  // otherwise yellow (default catch-all)
-  return "yellow";
+  if (progress >= 60 && overdueCount === 0 && kpiAway === 0) return "On Track";
+  if (progress < 30 || overdueCount >= 2 || kpiAway > 0) return "At Risk";
+  // otherwise Pending (default catch-all)
+  return "Pending";
 }
 
 /* CRUD / listing */
@@ -86,7 +86,11 @@ export async function createSpeedboat(payload) {
   const speedboat = await Speedboat.create(rest);
 
   if (Array.isArray(crew)) {
-    const items = crew.map((name) => ({ speedboat_id: speedboat.id, name }));
+    const items = crew.map((c) => {
+      if (typeof c === "string") return { speedboat_id: speedboat.id, name: c };
+      const { name, email } = c || {};
+      return { speedboat_id: speedboat.id, name, email };
+    });
     await CrewMember.bulkCreate(items);
   }
 
@@ -121,23 +125,35 @@ export async function createSpeedboat(payload) {
   // return full object
   return getSpeedboatById(speedboat.id);
 }
-
-export async function listSpeedboats({ q, page = 1, limit = 25 }) {
-  const offset = (page - 1) * limit;
+export async function listSpeedboats({ q, health, progressMin, progressMax, mentorName, page = 1, size = 10 }) {
+  const offset = (page - 1) * size;
   const where = {};
   if (q) {
     where[Op.or] = [
-      { name: { [Op.iLike]: `%${q}%` } },
-      { purpose: { [Op.iLike]: `%${q}%` } },
-      { captain: { [Op.iLike]: `%${q}%` } },
+      { mentor: { [Op.iLike]: `%${q}%` } },
+      { sponsor: { [Op.iLike]: `%${q}%` } },
     ];
+  }
+ 
+  if (health) {
+    where.health = health;
+  }
+  if (progressMin !== undefined) {
+    where.progress = { ...where.progress, [Op.gte]: Number(progressMin) };
+  }
+  if (progressMax !== undefined) {
+    where.progress = { ...where.progress, [Op.lte]: Number(progressMax) };
+  }
+  if (mentorName) {
+    where.mentor = { [Op.iLike]: `%${mentorName}%` };
   }
 
   const { rows, count } = await Speedboat.findAndCountAll({
     where,
-    limit: Number(limit),
+    limit: Number(size),
     offset: Number(offset),
     order: [["created_at", "DESC"]],
+    distinct: true,         
     include: [
       { model: CrewMember, as: "crew" },
       { model: KPI, as: "kpis" },
@@ -152,7 +168,7 @@ export async function listSpeedboats({ q, page = 1, limit = 25 }) {
     ],
   });
 
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size };
 }
 
 export async function getSpeedboatById(id) {
@@ -189,7 +205,11 @@ export async function updateSpeedboat(id, updates) {
   // For nested arrays we will do simple replace strategy
   if (Array.isArray(crew)) {
     await CrewMember.destroy({ where: { speedboat_id: id } });
-    const items = crew.map(name => ({ name, speedboat_id: id }));
+    const items = crew.map((c) => {
+      if (typeof c === "string") return { name: c, speedboat_id: id };
+      const { name, email } = c || {};
+      return { name, email, speedboat_id: id };
+    });
     if (items.length) await CrewMember.bulkCreate(items);
   }
 
@@ -234,6 +254,13 @@ export async function deleteSpeedboat(id) {
 }
 
 /**
+ * Touch speedboat updated_at
+ */
+export async function touchSpeedboat(id) {
+  await Speedboat.update({ id }, { where: { id } });
+}
+
+/**
  * recompute health & save
  */
 export async function recomputeHealth(id) {
@@ -269,7 +296,7 @@ export async function refreshMilestoneStatuses(speedboatId) {
     }
     const due = dayjs(m.due_date);
     if (due.isAfter(now, "day")) {
-      m.status = "on-track";123
+      m.status = "on-track";
     } else {
       const daysOver = now.diff(due, "day");
       if (daysOver >= 3 && daysOver <= 7) m.status = "at-risk";

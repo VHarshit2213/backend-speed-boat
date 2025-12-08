@@ -42,7 +42,7 @@ export const update = async (req, res) => {
 export const remove = async (req, res) => {
   try {
     await kpiService.deleteKPI(req.params.id);
-    return ApiResponse.noContent(res);
+    return ApiResponse.ok(res);
   } catch (err) {
     return ApiResponse.error(res, err.message);
   }

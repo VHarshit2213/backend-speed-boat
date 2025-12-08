@@ -6,10 +6,9 @@ export async function sendMail({ to, subject, html }) {
   
   const msg = {
     to: to, 
-    // from:"info@skalpel.com", 
     from: {
-      email: 'info@skalpel.com', 
-      name: 'Skalpel Support',     
+      email: 'info@speedboat.com', 
+      name: 'spped boat Support',     
     },
     subject: subject,
     html: html,

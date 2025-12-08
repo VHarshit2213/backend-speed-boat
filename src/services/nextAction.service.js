@@ -1,4 +1,5 @@
 import models from "../models/index.js";
+import { touchSpeedboat } from "./speedboat.service.js";
 const { NextAction, Speedboat } = models;
 
 export async function createNextAction({ speedboat_id, task, owner, due_date, status }) {
@@ -8,7 +9,9 @@ export async function createNextAction({ speedboat_id, task, owner, due_date, st
     err.status = 404;
     throw err;
   }
-  return NextAction.create({ speedboat_id, task, owner, due_date, status });
+  const na = await NextAction.create({ speedboat_id, task, owner, due_date, status });
+  await touchSpeedboat(speedboat_id);
+  return na;
 }
 
 export async function listNextActions({ page = 1, limit = 25, speedboat_id }) {
@@ -36,9 +39,15 @@ export async function updateNextAction(id, updates) {
     throw err;
   }
   await a.update(updates);
+  await touchSpeedboat(a.speedboat_id);
   return a;
 }
 
 export async function deleteNextAction(id) {
-  await NextAction.destroy({ where: { id } });
+  const a = await NextAction.findByPk(id);
+  if (a) {
+    const speedboatId = a.speedboat_id;
+    await NextAction.destroy({ where: { id } });
+    await touchSpeedboat(speedboatId);
+  }
 }

@@ -58,15 +58,15 @@ export default (sequelize) => {
                 defaultValue: DataTypes.UUIDV4,
                 primaryKey: true,
             },
-            name: { type: DataTypes.TEXT, allowNull: false },
-            purpose: DataTypes.TEXT,
-            mission: DataTypes.TEXT,
-            captain: DataTypes.TEXT,
-            sponsor: DataTypes.TEXT,
-            mentor: DataTypes.TEXT,
+            name: { type: DataTypes.STRING, allowNull: false },
+            purpose: DataTypes.STRING,
+            mission: { type: DataTypes.STRING, allowNull: true },
+            captain: DataTypes.STRING,
+            sponsor: DataTypes.STRING,
+            mentor: DataTypes.STRING,
             health: {
                 type: DataTypes.STRING(10),
-                defaultValue: "yellow",
+                defaultValue: "Pending",
             },
             progress: {
                 type: DataTypes.INTEGER,
@@ -83,8 +83,20 @@ export default (sequelize) => {
                 type: DataTypes.DATE,
                 defaultValue: DataTypes.NOW,
             },
+            updated_at: {
+                type: DataTypes.DATE,
+                defaultValue: DataTypes.NOW,
+            },
         },
-        { sequelize, modelName: "Speedboat", tableName: "speedboats", timestamps: false }
+        {
+            sequelize,
+            modelName: "Speedboat",
+            tableName: "speedboats",
+
+            timestamps: true,
+            createdAt: "created_at",
+            updatedAt: "updated_at",
+        }
     );
 
     return Speedboat;

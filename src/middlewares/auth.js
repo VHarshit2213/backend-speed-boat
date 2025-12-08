@@ -14,7 +14,7 @@ export const requireAuth = async (req, res, next) => {
     const token = authHeader.slice(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET); // { sub, role, iat, exp }
 
-    // ✅ Sequelize: fetch user by PK (id)
+    // Sequelize: fetch user by PK (id)
     const user = await User.findByPk(decoded.sub, {
       attributes: { exclude: ["password"] }, // remove password field
     });
@@ -25,7 +25,7 @@ export const requireAuth = async (req, res, next) => {
         .json({ success: false, message: "Invalid token, user not found" });
     }
 
-    // ✅ Expose consistent fields
+    // Expose consistent fields
     req.auth = decoded;   // raw JWT payload
     req.user = user;      // Sequelize instance (with toJSON if needed)
     req.userId = user.id; // Sequelize uses `id`

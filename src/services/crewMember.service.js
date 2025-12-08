@@ -1,8 +1,9 @@
 import models from "../models/index.js";
 import { Op } from "sequelize";
+import { touchSpeedboat } from "./speedboat.service.js";
 const { CrewMember, Speedboat } = models;
 
-export async function createCrewMember({ speedboat_id, name }) {
+export async function createCrewMember({ speedboat_id, name, email }) {
   // validate speedboat existence
   const sb = await Speedboat.findByPk(speedboat_id);
   if (!sb) {
@@ -10,7 +11,9 @@ export async function createCrewMember({ speedboat_id, name }) {
     err.status = 404;
     throw err;
   }
-  return CrewMember.create({ speedboat_id, name });
+  const cm = await CrewMember.create({ speedboat_id, name, email });
+  await touchSpeedboat(speedboat_id);
+  return cm;
 }
 
 export async function listCrewMembers({ page = 1, limit = 25, speedboat_id }) {
@@ -38,9 +41,15 @@ export async function updateCrewMember(id, updates) {
     throw err;
   }
   await cm.update(updates);
+  await touchSpeedboat(cm.speedboat_id);
   return cm;
 }
 
 export async function deleteCrewMember(id) {
-  await CrewMember.destroy({ where: { id } });
+  const cm = await CrewMember.findByPk(id);
+  if (cm) {
+    const speedboatId = cm.speedboat_id;
+    await CrewMember.destroy({ where: { id } });
+    await touchSpeedboat(speedboatId);
+  }
 }

@@ -15,8 +15,8 @@ export const create = async (req, res) => {
 // List (with associations)
 export const list = async (req, res) => {
   try {
-    const { q, page = 1, limit = 25 } = req.query;
-    const result = await speedboatService.listSpeedboats({ q, page, limit });
+    const { q, mentor, sponsor, health, progressMin, progressMax, mentorName, page = 1, size = 10 } = req.query;
+    const result = await speedboatService.listSpeedboats({ q, health, progressMin, progressMax, mentorName, page, size });
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -48,7 +48,7 @@ export const update = async (req, res) => {
 export const remove = async (req, res) => {
   try {
     await speedboatService.deleteSpeedboat(req.params.id);
-    return ApiResponse.noContent(res);
+    return ApiResponse.ok(res, "Deleted Successfully...");
   } catch (err) {
     return ApiResponse.error(res, err.message);
   }
