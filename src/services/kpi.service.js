@@ -1,5 +1,5 @@
 import models from "../models/index.js";
-import { touchSpeedboat } from "./speedboat.service.js";
+import { touchSpeedboat, recomputeProgress } from "./speedboat.service.js";
 const { KPI, Speedboat } = models;
 
 export async function createKPI({ speedboat_id, name, baseline, target, current, unit }) {
@@ -11,6 +11,7 @@ export async function createKPI({ speedboat_id, name, baseline, target, current,
   }
   const kpi = await KPI.create({ speedboat_id, name, baseline, target, current, unit });
   await touchSpeedboat(speedboat_id);
+  await recomputeProgress(speedboat_id);
   return kpi;
 }
 
@@ -40,6 +41,7 @@ export async function updateKPI(id, updates) {
   }
   await k.update(updates);
   await touchSpeedboat(k.speedboat_id);
+  await recomputeProgress(k.speedboat_id);
   return k;
 }
 
@@ -49,5 +51,6 @@ export async function deleteKPI(id) {
     const speedboatId = k.speedboat_id;
     await KPI.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
+    await recomputeProgress(speedboatId);
   }
 }

@@ -254,10 +254,69 @@ export async function deleteSpeedboat(id) {
 }
 
 /**
+ * Compute progress based on KPIs and milestones
+ */
+export async function computeProgressForSpeedboat(speedboat) {
+  // speedboat may be plain object or sequelize instance with includes
+  const [kpis, milestones] = await Promise.all([
+    speedboat.kpis ? speedboat.kpis : KPI.findAll({ where: { speedboat_id: speedboat.id } }),
+    speedboat.milestones ? speedboat.milestones : Milestone.findAll({ where: { speedboat_id: speedboat.id } }),
+  ]);
+
+  let kpiProgress = 0;
+  if (kpis && kpis.length > 0) {
+    let totalKpiProgress = 0;
+    for (const k of kpis) {
+      if (k.current == null || k.target == null || k.baseline == null) continue;
+      const baseline = Number(k.baseline), target = Number(k.target), current = Number(k.current);
+      let progress = 0;
+      if (target > baseline) {
+        // higher is better
+        progress = Math.max(0, Math.min(100, ((current - baseline) / (target - baseline)) * 100));
+      } else if (target < baseline) {
+        // lower is better
+        progress = Math.max(0, Math.min(100, ((baseline - current) / (baseline - target)) * 100));
+      } else {
+        // target == baseline, perhaps 100 if current == target
+        progress = current === target ? 100 : 0;
+      }
+      totalKpiProgress += progress;
+    }
+    kpiProgress = totalKpiProgress / kpis.length;
+  }
+
+  let milestoneProgress = 0;
+  if (milestones && milestones.length > 0) {
+    const doneCount = milestones.filter(m => m.status === 'done').length;
+    milestoneProgress = (doneCount / milestones.length) * 100;
+  }
+
+  // Overall progress: average of KPI and milestone progress
+  const overallProgress = ((kpiProgress + milestoneProgress) / 2) * 2;
+  return Math.round(overallProgress);
+}
+
+/**
  * Touch speedboat updated_at
  */
 export async function touchSpeedboat(id) {
   await Speedboat.update({ id }, { where: { id } });
+}
+
+/**
+ * Recompute and update progress
+ */
+export async function recomputeProgress(id) {
+  const speedboat = await getSpeedboatById(id);
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
+    err.status = 404;
+    throw err;
+  }
+  const progress = await computeProgressForSpeedboat(speedboat);
+  speedboat.progress = progress;
+  await speedboat.save();
+  return { id: speedboat.id, progress };
 }
 
 /**

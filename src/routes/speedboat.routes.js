@@ -15,5 +15,6 @@ router.delete("/:id", asyncHandler(ctrl.remove));
 // business endpoints
 router.post("/:id/recompute-health", asyncHandler(ctrl.computeHealth));
 router.post("/:id/refresh-milestones", asyncHandler(ctrl.updateMilestonesStatuses));
+router.post("/:id/calculate-progress", asyncHandler(ctrl.recomputeProgress))
 
 export default router;

@@ -15,8 +15,8 @@ export const create = async (req, res) => {
 // List (with associations)
 export const list = async (req, res) => {
   try {
-    const { q, mentor, sponsor, health, progressMin, progressMax, mentorName, page = 1, size = 10 } = req.query;
-    const result = await speedboatService.listSpeedboats({ q, health, progressMin, progressMax, mentorName, page, size });
+    const { q, mentor, sponsor, health, progressMin, progressMax, captionName, page = 1, size = 25 } = req.query;
+    const result = await speedboatService.listSpeedboats({ q, mentor, sponsor, health, progressMin, progressMax, captionName, page, size });
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -67,6 +67,15 @@ export const computeHealth = async (req, res) => {
 export const updateMilestonesStatuses = async (req, res) => {
   try {
     const result = await speedboatService.refreshMilestoneStatuses(req.params.id);
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};
+
+export const recomputeProgress = async (req, res) => {
+  try {
+    const result = await speedboatService.recomputeProgress(req.params.id);
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
