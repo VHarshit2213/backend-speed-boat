@@ -2,8 +2,11 @@ import { Op } from "sequelize";
 import models from "../models/index.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { sendMail } from "../utils/mailer.js";
+import { otpTemplate} from "../utils/emailTemplates.js";
 
-const { User} = models;
+const { User, Otp} = models;
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // JWT helper
 const signToken = (user) =>
@@ -107,7 +110,6 @@ export async function forgotPassword({ email }) {
     throw err;
   }
 
-  // 1. Find user
   const user = await User.findOne({ where: { email } });
   if (!user) {
     const err = new Error("User not found");
@@ -115,53 +117,43 @@ export async function forgotPassword({ email }) {
     throw err;
   }
 
-  // 2. Generate token
-  const token = jwt.sign(
-    { userId: user.id, email: user.email },
-    process.env.JWT_SECRET || "super_secret_key",
-    { expiresIn: "1h" }
-  );
+  // --- OTP GENERATION LOGIC ---
+    const code = generateOtp();
+    const expiresAt = new Date(new Date().getTime() + 10 * 60000); // 10 mins
 
-  const resetLink = `https://speedBoat.com/reset-password?token=${token}`;
+    await Otp.create({
+      userId: user.id,
+      code,
+      type: 'reset_password',
+      expiresAt
+    });
 
-  //   // 3. Send email
-  console.log("Sending password reset email to:", user.email);
+  console.log("Sending OTP for password reset email to:", user.email);
   const result = await sendMail({
     to: user.email,
-    subject: "Reset your speedBoat password",
-    html: forgotPasswordTemplate(user.fullName, resetLink),
+    subject: "OTP for speedBoat password reset",
+    html: otpTemplate(user.fullName, code),
   });
 
 
-  return { message: "Password reset link sent to your email" };
+  return { message: "Password reset code sent to your email" };
 }
 
 // Reset password
-export async function resetPassword({ token, newPassword }) {
-  if (!token) {
-    const err = new Error("Token is required");
+export async function resetPassword({ userId, newPassword }) {
+  if (!userId) {
+    const err = new Error("userId is required");
     err.status = 400;
     throw err;
   }
 
-  if (!newPassword) {
-    const err = new Error("Password is required");
+  if(!newPassword) {
+    const err = new Error("newPassword is required");
     err.status = 400;
     throw err;
   }
 
-  // 1. Verify token
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET || "super_secret_key");
-  } catch (err) {
-    const error = new Error("Invalid or expired token");
-    error.status = 400;
-    throw error;
-  }
-
-  // 2. Find user
-  const user = await User.findByPk(decoded.userId);
+  const user = await User.findByPk(userId);
   if (!user) {
     const err = new Error("User not found");
     err.status = 404;
@@ -188,4 +180,28 @@ export async function resetPassword({ token, newPassword }) {
   await user.save();
 
   return { message: "Password reset successful" };
+}
+
+
+export async function verifyEmail({ email, code }) {
+  const user = await User.findOne({ where: { email } });
+  if (!user) throw new Error("User not found");
+  if (user.isVerified) return { message: "User already verified" };
+
+  const validOtp = await Otp.findOne({
+    where: { userId: user.id, code, type: 'reset_password' }
+  });
+
+  if (!validOtp) throw new Error("Invalid OTP");
+  if (new Date() > validOtp.expiresAt) throw new Error("OTP expired");
+
+   // Clean up OTP
+  await validOtp.destroy();
+
+   return {
+    user: {
+      userId: user.id,
+      OtpVerified: true
+    }
+  };
 }

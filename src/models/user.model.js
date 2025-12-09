@@ -3,7 +3,7 @@ import { DataTypes, Model } from "sequelize";
 export default (sequelize) => {
   class User extends Model {
     static associate(models) {
-     
+     this.hasMany(models.Otp, { foreignKey: "userId", as: "otps", onDelete: 'CASCADE' });
     }
   }
 

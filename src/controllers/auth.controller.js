@@ -61,3 +61,15 @@ export const resetPassword = async (req, res) => {
     return ApiResponse.error(res, err.message || "Failed to reset password");
   }
 };
+
+export const verifyAccount = async (req, res) => {
+  try {
+    const { userId, code } = req.body;
+    if(!userId || !code) return ApiResponse.error(res, "User ID and Code required", 400);
+
+    const result = await authService.verifyEmail({ userId, code });
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message, 400);
+  }
+};
