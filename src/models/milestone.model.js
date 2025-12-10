@@ -17,7 +17,7 @@ export default (sequelize) => {
       speedboat_id: { type: DataTypes.UUID, allowNull: false },
       title: { type: DataTypes.STRING, allowNull: false },
       due_date: DataTypes.DATE,
-      status: { type: DataTypes.STRING(20), defaultValue: "pending" },
+      status: { type: DataTypes.STRING(20), defaultValue: "Pending" },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: {
         type: DataTypes.DATE,

@@ -61,12 +61,12 @@ export async function deleteMilestone(id) {
  * possible utility to auto-adjust status (if you want to call it)
  */
 export function computeMilestoneStatus(milestone) {
-  if (milestone.status === "done") return "done";
-  if (!milestone.due_date) return "pending";
+  if (milestone.status === "Done") return "Done";
+  if (!milestone.due_date) return "Pending";
   const now = dayjs();
   const due = dayjs(milestone.due_date);
-  if (due.isAfter(now, "day")) return "on-track";
+  if (due.isAfter(now, "day")) return "On Track";
   const daysOver = now.diff(due, "day");
-  if (daysOver >= 3 && daysOver <= 7) return "at-risk";
-  return "at-risk";
+  if (daysOver >= 3 && daysOver <= 7) return "At Risk";
+  return "At Risk";
 }

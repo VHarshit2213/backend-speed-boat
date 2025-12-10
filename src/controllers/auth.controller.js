@@ -62,12 +62,13 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-export const verifyAccount = async (req, res) => {
+export const verifyOtp = async (req, res) => {
   try {
-    const { userId, code } = req.body;
-    if(!userId || !code) return ApiResponse.error(res, "User ID and Code required", 400);
+    const { email, code } = req.body;
+    console.log("Verifying OTP for email:", email, "with code:", code);
+    if(!email || !code) return ApiResponse.error(res, "Email and Code required", 400);
 
-    const result = await authService.verifyEmail({ userId, code });
+    const result = await authService.verifyOTP({ email, code });
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message, 400);

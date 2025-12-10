@@ -6,7 +6,7 @@ import { sendMail } from "../utils/mailer.js";
 import { otpTemplate} from "../utils/emailTemplates.js";
 
 const { User, Otp} = models;
-const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
 
 // JWT helper
 const signToken = (user) =>
@@ -183,7 +183,7 @@ export async function resetPassword({ userId, newPassword }) {
 }
 
 
-export async function verifyEmail({ email, code }) {
+export async function verifyOTP({ email, code }) {
   const user = await User.findOne({ where: { email } });
   if (!user) throw new Error("User not found");
   if (user.isVerified) return { message: "User already verified" };

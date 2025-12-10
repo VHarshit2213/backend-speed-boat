@@ -6,8 +6,9 @@ const router = Router();
 
 router.post('/signup', validate(authCtrl.registerSchema), asyncHandler(authCtrl.register));
 router.post('/signin', validate(authCtrl.loginSchema),    asyncHandler(authCtrl.login));
-router.post('/reset', asyncHandler(authCtrl.resetPassword))
+router.post('/verify-otp', asyncHandler(authCtrl.verifyOtp))
 router.post("/forgot-password", asyncHandler(authCtrl.forgotPassword));
 router.post("/reset-password", asyncHandler(authCtrl.resetPassword));
 
 export default router;
+    

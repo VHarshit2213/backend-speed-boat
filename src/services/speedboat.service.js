@@ -59,7 +59,7 @@ export async function computeHealthForSpeedboat(speedboat) {
   for (const m of milestones || []) {
     if (!m.due_date) continue;
     const due = dayjs(m.due_date);
-    if (m.status === "done") continue;
+    if (m.status === "Done" || m.status === "On Track") continue;
     if (due.isBefore(now, "day")) {
       const daysOver = now.diff(due, "day");
       if (daysOver >= 3) overdueCount++;
@@ -255,46 +255,72 @@ export async function deleteSpeedboat(id) {
 
 /**
  * Compute progress based on KPIs and milestones
+ * Progress is the percentage of successful KPIs and milestones out of total.
+ * A KPI is successful if its progress reaches 100%.
+ * A milestone is successful if status is 'done'.
  */
 export async function computeProgressForSpeedboat(speedboat) {
-  // speedboat may be plain object or sequelize instance with includes
+  // Get KPIs & milestones (same as before)
   const [kpis, milestones] = await Promise.all([
     speedboat.kpis ? speedboat.kpis : KPI.findAll({ where: { speedboat_id: speedboat.id } }),
     speedboat.milestones ? speedboat.milestones : Milestone.findAll({ where: { speedboat_id: speedboat.id } }),
   ]);
 
-  let kpiProgress = 0;
-  if (kpis && kpis.length > 0) {
-    let totalKpiProgress = 0;
+  const progressValues = [];
+
+  // --- KPI PROGRESS NOW USES REAL PERCENT, NOT ONLY 100 ---
+  if (kpis) {
     for (const k of kpis) {
       if (k.current == null || k.target == null || k.baseline == null) continue;
-      const baseline = Number(k.baseline), target = Number(k.target), current = Number(k.current);
-      let progress = 0;
+
+      const baseline = Number(k.baseline);
+      const target = Number(k.target);
+      const current = Number(k.current);
+
+      let pct = 0;
+
       if (target > baseline) {
         // higher is better
-        progress = Math.max(0, Math.min(100, ((current - baseline) / (target - baseline)) * 100));
+        pct = ((current - baseline) / (target - baseline)) * 100;
       } else if (target < baseline) {
         // lower is better
-        progress = Math.max(0, Math.min(100, ((baseline - current) / (baseline - target)) * 100));
+        pct = ((baseline - current) / (baseline - target)) * 100;
       } else {
-        // target == baseline, perhaps 100 if current == target
-        progress = current === target ? 100 : 0;
+        pct = current === target ? 100 : 0;
       }
-      totalKpiProgress += progress;
+
+      pct = Math.max(0, Math.min(100, pct));
+      progressValues.push(pct);
     }
-    kpiProgress = totalKpiProgress / kpis.length;
   }
 
-  let milestoneProgress = 0;
-  if (milestones && milestones.length > 0) {
-    const doneCount = milestones.filter(m => m.status === 'done').length;
-    milestoneProgress = (doneCount / milestones.length) * 100;
+  // --- MILESTONES NOW GET SCORES (80 for On Track, etc.) ---
+  const milestoneScore = {
+    "done": 100,
+    "Done": 100,
+    "On Track": 70,
+    "At Risk": 20,
+    "at risk": 20,
+    "blocked": 0,
+    "Blocked": 0,
+  };
+
+  if (milestones) {
+    for (const m of milestones) {
+      const key = (m.status || "").trim();
+      const score = milestoneScore[key] ?? 0;
+      progressValues.push(score);
+    }
   }
 
-  // Overall progress: average of KPI and milestone progress
-  const overallProgress = ((kpiProgress + milestoneProgress) / 2) * 2;
-  return Math.round(overallProgress);
+  // No KPIs or milestones → default 0
+  if (progressValues.length === 0) return 0;
+
+  // --- FINAL AVERAGE ---
+  const avg = progressValues.reduce((sum, v) => sum + v, 0) / progressValues.length;
+  return Math.round(avg);
 }
+
 
 /**
  * Touch speedboat updated_at
@@ -347,20 +373,20 @@ export async function refreshMilestoneStatuses(speedboatId) {
   const now = dayjs();
 
   for (const m of milestones) {
-    if (m.status === "done") continue;
+    if (m.status === "Done" ) continue;
     if (!m.due_date) {
-      m.status = "pending";
+      m.status = "Pending";
       await m.save();
       continue;
     }
     const due = dayjs(m.due_date);
     if (due.isAfter(now, "day")) {
-      m.status = "on-track";
+      m.status = "On Track";
     } else {
       const daysOver = now.diff(due, "day");
-      if (daysOver >= 3 && daysOver <= 7) m.status = "at-risk";
-      else if (daysOver > 7) m.status = "at-risk"; // treat >7 as at-risk (client rule can be adjusted)
-      else m.status = "at-risk"; // 0-2 days overdue => at-risk
+      if (daysOver >= 3 && daysOver <= 7) m.status = "At Risk";
+      else if (daysOver > 7) m.status = "At Risk"; // treat >7 as at-risk (client rule can be adjusted)
+      else m.status = "At Risk"; // 0-2 days overdue => at-risk
     }
     await m.save();
   }
