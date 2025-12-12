@@ -78,12 +78,28 @@ export async function computeHealthForSpeedboat(speedboat) {
 
 /* CRUD / listing */
 export async function createSpeedboat(payload) {
-  // create speedboat and optionally create nested relations if provided
   const {
-    crew, kpis, milestones, nextActions, reflections, dependencies, ...rest
+    guiding_spirit,
+    challenge,
+    measurement_of_success,
+    current_status,
+    crew,
+    kpis,
+    milestones,
+    nextActions,
+    reflections,
+    dependencies,
+    ...rest
   } = payload;
 
-  const speedboat = await Speedboat.create(rest);
+  // Create speedboat with new fields included
+  const speedboat = await Speedboat.create({
+    ...rest,
+    guiding_spirit,
+    challenge,
+    measurement_of_success,
+    current_status,
+  });
 
   if (Array.isArray(crew)) {
     const items = crew.map((c) => {
@@ -134,7 +150,7 @@ export async function listSpeedboats({ q, health, progressMin, progressMax, ment
       { sponsor: { [Op.iLike]: `%${q}%` } },
     ];
   }
- 
+
   if (health) {
     where.health = health;
   }
@@ -153,7 +169,7 @@ export async function listSpeedboats({ q, health, progressMin, progressMax, ment
     limit: Number(size),
     offset: Number(offset),
     order: [["created_at", "DESC"]],
-    distinct: true,         
+    distinct: true,
     include: [
       { model: CrewMember, as: "crew" },
       { model: KPI, as: "kpis" },
@@ -197,10 +213,27 @@ export async function updateSpeedboat(id, updates) {
   }
 
   const {
-    crew, kpis, milestones, nextActions, reflections, dependencies, ...rest
+    guiding_spirit,
+    challenge,
+    measurement_of_success,
+    current_status,
+    crew,
+    kpis,
+    milestones,
+    nextActions,
+    reflections,
+    dependencies,
+    ...rest
   } = updates;
 
-  await speedboat.update(rest);
+  // Update main speedboat table including new fields
+  await speedboat.update({
+    ...rest,
+    guiding_spirit,
+    challenge,
+    measurement_of_success,
+    current_status,
+  });
 
   // For nested arrays we will do simple replace strategy
   if (Array.isArray(crew)) {
@@ -379,7 +412,7 @@ export async function refreshMilestoneStatuses(speedboatId) {
   const now = dayjs();
 
   for (const m of milestones) {
-    if (m.status === "Done" ) continue;
+    if (m.status === "Done") continue;
     if (!m.due_date) {
       m.status = "Pending";
       await m.save();

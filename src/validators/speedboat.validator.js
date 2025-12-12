@@ -13,7 +13,7 @@ const milestoneSchema = z.object({
   id: z.string().uuid().optional(),
   title: z.string(),
   due_date: z.string().optional().nullable(),
-  status: z.enum(["pending","on-track","at-risk","done"]).optional(),
+  status: z.enum(["pending", "on-track", "at-risk", "done"]).optional(),
 });
 
 const nextActionSchema = z.object({
@@ -21,7 +21,7 @@ const nextActionSchema = z.object({
   task: z.string(),
   owner: z.string(),
   due_date: z.string().optional().nullable(),
-  status: z.enum(["open","in-progress","done"]).optional(),
+  status: z.enum(["open", "in-progress", "done"]).optional(),
 });
 
 export const createSpeedboatSchema = z.object({
@@ -31,7 +31,10 @@ export const createSpeedboatSchema = z.object({
   captain: z.string().optional().nullable(),
   sponsor: z.string().optional().nullable(),
   mentor: z.string().optional().nullable(),
-  health: z.enum(["green","yellow","red"]).optional(),
+  guiding_spirit: z.array(z.string()).optional(),
+  challenge: z.array(z.string()).optional(),
+  measurement_of_success: z.array(z.string()).optional(),
+  current_status: z.array(z.string()).optional(),
   progress: z.number().min(0).max(100).optional(),
   manual_health_override: z.boolean().optional(),
   crew: z.array(z.object({ name: z.string(), email: z.string().email().optional().nullable() })).optional(),
