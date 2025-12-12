@@ -44,12 +44,13 @@ export async function getStatusDetails(speedboatId) {
   // ===== FAILING KPIs =====
   const failingKPIs = (sb.kpis || []).filter(k => {
     if (k.target == null || k.current == null) return false;
+    if (k.isCompleted) return false; // skip completed KPIs
     return Number(k.current) < Number(k.target); // simple rule
   });
 
   // ===== OVERDUE MILESTONES =====
   const overdueMilestones = (sb.milestones || []).filter(m => {
-    if (!m.due_date || m.status === "done") return false;
+    if (!m.due_date || m.status === "done" || m.status === "Done") return false;
     return dayjs().isAfter(dayjs(m.due_date), "day");
   });
 

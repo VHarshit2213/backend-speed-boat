@@ -7,6 +7,7 @@ export const createKPISchema = z.object({
   target: z.number().optional().nullable(),
   current: z.number().optional().nullable(),
   unit: z.string().optional().nullable(),
+  isCompleted: z.boolean().optional(),
 });
 
 export const updateKPISchema = createKPISchema.partial();

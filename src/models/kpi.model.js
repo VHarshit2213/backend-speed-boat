@@ -24,6 +24,7 @@ export default (sequelize) => {
       target: DataTypes.DECIMAL,
       current: DataTypes.DECIMAL,
       unit: DataTypes.STRING,
+      isCompleted: { type: DataTypes.BOOLEAN, defaultValue: false },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 

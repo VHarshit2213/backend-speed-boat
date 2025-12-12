@@ -271,6 +271,12 @@ export async function computeProgressForSpeedboat(speedboat) {
   // --- KPI PROGRESS NOW USES REAL PERCENT, NOT ONLY 100 ---
   if (kpis) {
     for (const k of kpis) {
+      // If KPI is marked as completed, it contributes 100% to progress
+      if (k.isCompleted) {
+        progressValues.push(100);
+        continue;
+      }
+
       if (k.current == null || k.target == null || k.baseline == null) continue;
 
       const baseline = Number(k.baseline);

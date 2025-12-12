@@ -18,7 +18,7 @@ export default (sequelize) => {
       task: { type: DataTypes.STRING, allowNull: false },
       owner: { type: DataTypes.STRING, allowNull: false },
       due_date: DataTypes.DATE,
-      status: { type: DataTypes.STRING(20), defaultValue: "open" },
+      status: { type: DataTypes.STRING(20), defaultValue: "Open" },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: {
         type: DataTypes.DATE,
