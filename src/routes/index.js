@@ -8,6 +8,8 @@ import nextActionRoutes from "./nextAction.routes.js";
 import reflectionRoutes from "./reflection.routes.js";
 import dependencyRoutes from "./dependency.routes.js";
 import statusHistoryRoutes from "./statusHistory.routes.js";
+import budgetRoutes from "./budgetResource.routes.js";
+import messageRoutes from "./message.routes.js";
 const router = Router();
 
 router.use('/auth', authRoutes);
@@ -19,6 +21,8 @@ router.use("/next-actions", nextActionRoutes);
 router.use("/reflections", reflectionRoutes);
 router.use("/dependencies", dependencyRoutes);
 router.use("/speedboat", statusHistoryRoutes);
+router.use("/budget-resources", budgetRoutes);
+router.use("/messages", messageRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });

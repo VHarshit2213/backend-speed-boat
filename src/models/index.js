@@ -12,6 +12,8 @@ import NextActionModel from "./nextAction.model.js";
 import ReflectionModel from "./reflection.model.js";
 import StatusHistoryModel from "./statusHistory.model.js";
 import OtpModel from "./otp.model.js";
+import MessageModel from "./message.model.js";
+import budgetResourceModel from "./budgetResource.model.js";
 
 // Init Sequelize
 const sequelize = new Sequelize(env.DB_URL, {
@@ -34,6 +36,8 @@ const models = {
   Reflection: ReflectionModel(sequelize),
   StatusHistory: StatusHistoryModel(sequelize),
   Otp: OtpModel(sequelize),
+  Message: MessageModel(sequelize),
+  BudgetResource: budgetResourceModel(sequelize),
 };
 
 // Apply associations

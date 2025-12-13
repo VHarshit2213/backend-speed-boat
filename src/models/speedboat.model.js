@@ -33,6 +33,18 @@ export default (sequelize) => {
                 as: "reflections",
                 onDelete: "CASCADE",
             });
+            
+            Speedboat.hasMany(models.Message, {
+                foreignKey: "speedboat_id",
+                as: "messages",
+                onDelete: "CASCADE",
+            });
+
+            Speedboat.hasMany(models.BudgetResource, {
+                foreignKey: "speedboat_id",
+                as: "budgetResources",
+                onDelete: "CASCADE",
+            });
 
             // Many-to-many self-reference (dependencies)
             Speedboat.belongsToMany(models.Speedboat, {
@@ -67,7 +79,7 @@ export default (sequelize) => {
             current_status: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
             captain: DataTypes.STRING,
             sponsor: DataTypes.STRING,
-            mentor: DataTypes.STRING,
+            navigators: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
             health: {
                 type: DataTypes.STRING(10),
                 defaultValue: "Pending",
