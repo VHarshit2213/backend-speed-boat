@@ -25,7 +25,7 @@ export default (sequelize) => {
     {
       sequelize,
       modelName: "BudgetResource",
-      tableName: "speedboat_budget_resources",
+      tableName: "budget_resources",
       timestamps: true,
     }
   );

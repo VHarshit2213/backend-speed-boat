@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { validate } from "../middlewares/validate.js";
 import * as ctrl from "../controllers/message.controller.js";
-import { createMessageSchema } from "../validators/message.validator.js";
+import { requireAuth} from '../middlewares/auth.js'
 
 const router = Router();
+router.use(requireAuth);
 
-router.post("/", validate(createMessageSchema), asyncHandler(ctrl.create));
+router.post("/", asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", asyncHandler(ctrl.update));

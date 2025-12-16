@@ -3,9 +3,10 @@ import * as ctrl from "../controllers/nextAction.controller.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { validate } from "../middlewares/validate.js";
 import { createNextActionSchema, updateNextActionSchema } from "../validators/nextAction.validator.js";
+import { requireAuth} from '../middlewares/auth.js'
 
 const router = Router();
-
+router.use(requireAuth);
 router.post("/", validate(createNextActionSchema), asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));
 router.get("/:id", asyncHandler(ctrl.getById));

@@ -71,8 +71,6 @@ export default (sequelize) => {
                 primaryKey: true,
             },
             name: { type: DataTypes.STRING, allowNull: false },
-            purpose: DataTypes.STRING,
-            mission: { type: DataTypes.STRING, allowNull: true },
             guiding_spirit: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
             challenge: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
             measurement_of_success: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },

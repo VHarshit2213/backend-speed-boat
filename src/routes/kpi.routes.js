@@ -3,8 +3,10 @@ import * as ctrl from "../controllers/kpi.controller.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { validate } from "../middlewares/validate.js";
 import { createKPISchema, updateKPISchema } from "../validators/kpi.validator.js";
+import { requireAuth} from '../middlewares/auth.js'
 
 const router = Router();
+router.use(requireAuth);
 
 router.post("/", validate(createKPISchema), asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));

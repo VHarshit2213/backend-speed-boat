@@ -199,6 +199,8 @@ export async function getSpeedboatById(id) {
       { model: Milestone, as: "milestones" },
       { model: NextAction, as: "nextActions" },
       { model: Reflection, as: "reflections" },
+      { model: Message, as: "messages" },
+      { model: BudgetResource, as: "budgetResources" },
       {
         model: Speedboat,
         as: "dependsOn",

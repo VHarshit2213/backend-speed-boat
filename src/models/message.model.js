@@ -22,7 +22,7 @@ export default (sequelize) => {
     {
       sequelize,
       modelName: "Message",
-      tableName: "speedboat_messages",
+      tableName: "messages",
       timestamps: true,
     }
   );
