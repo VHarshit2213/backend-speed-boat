@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import { env } from "../config/env.js";
+import fs from "fs";
 
 // Import model definitions
 import UserModel from "./user.model.js";
@@ -16,10 +17,20 @@ import MessageModel from "./message.model.js";
 import budgetResourceModel from "./budgetResource.model.js";
 
 // Init Sequelize
-const sequelize = new Sequelize(env.DB_URL, {
+//const sequelize = new Sequelize(env.DATABASE_URL, {
+ // dialect: "postgres",
+ // logging: false,
+  //dialectOptions: {
+   /// ssl: {
+     // require: true,
+      ///rejectUnauthorized: false
+   // }
+ // }
+//});
+
+const sequelize = new Sequelize(env.DATABASE_URL, {
   dialect: "postgres",
   logging: false,
-
   ssl: true, // required by pg
 
   dialectOptions: {
@@ -29,7 +40,6 @@ const sequelize = new Sequelize(env.DB_URL, {
     },
   },
 });
-
 
 // Initialize models
 const models = {
