@@ -1,15 +1,20 @@
-import 'dotenv/config';
+import dotenv from "dotenv";
 
-const required = (name, value) => {
-  if (!value) throw new Error(`Missing required env: ${name}`);
-  return value;
-};
+// Force dotenv to load immediately
+dotenv.config();
 
 export const env = {
-  nodeEnv: process.env.NODE_ENV || 'development',
-  port: Number(process.env.PORT) || 4000,
-  DB_URL: required('DB_URL', process.env.DB_URL),
-  JWT_SECRET: required('JWT_SECRET', process.env.JWT_SECRET),
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
-  BCRYPT_SALT_ROUNDS: process.env.BCRYPT_SALT_ROUNDS || '10',
+  NODE_ENV: process.env.NODE_ENV || "development",
+  PORT: process.env.PORT || 4000,
+  DATABASE_URL: process.env.DATABASE_URL,
+  JWT_SECRET: process.env.JWT_SECRET,
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+  BCRYPT_SALT_ROUNDS: process.env.BCRYPT_SALT_ROUNDS,
 };
+
+// HARD FAIL if missing
+if (!env.DATABASE_URL) {
+  console.error("❌ DATABASE_URL is missing. Check .env loading.");
+  process.exit(1);
+}
+
