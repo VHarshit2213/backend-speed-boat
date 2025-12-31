@@ -3,7 +3,7 @@ import * as kpiService from "../services/kpi.service.js";
 
 export const create = async (req, res) => {
   try {
-    const item = await kpiService.createKPI(req.body);
+    const item = await kpiService.createKPI(req.body, req.user.id);
     return ApiResponse.created(res, item);
   } catch (err) {
     return ApiResponse.error(res, err.message);

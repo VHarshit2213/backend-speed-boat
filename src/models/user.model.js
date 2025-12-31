@@ -4,6 +4,7 @@ export default (sequelize) => {
   class User extends Model {
     static associate(models) {
      this.hasMany(models.Otp, { foreignKey: "userId", as: "otps", onDelete: 'CASCADE' });
+     this.hasMany(models.Speedboat, { foreignKey: "userId", as: "speedboats", onDelete: 'CASCADE' });
     }
   }
 

@@ -143,7 +143,7 @@ export async function createSpeedboat(payload) {
   }
 
   // return full object
-  return getSpeedboatById(speedboat.id, userId);
+  return getSpeedboat(speedboat.id);
 }
 export async function listSpeedboats({ q, health, progressMin, progressMax, mentorName, page = 1, size = 10, userId }) {
   const offset = (page - 1) * size;
@@ -212,6 +212,25 @@ export async function getSpeedboatById(id, userId) {
   });
    if (!speedboat || speedboat.userId !== userId) { const err = new Error("Speedboat not found or not owned by you"); err.status = 404; throw err; }
   return speedboat;
+}
+
+export async function getSpeedboat(id) {
+  return Speedboat.findByPk(id, {
+    include: [
+      { model: CrewMember, as: "crew" },
+      { model: KPI, as: "kpis" },
+      { model: Milestone, as: "milestones" },
+      { model: NextAction, as: "nextActions" },
+      { model: Reflection, as: "reflections" },
+      { model: Message, as: "messages" },
+      { model: BudgetResource, as: "budgetResources" },
+      {
+        model: Speedboat,
+        as: "dependsOn",
+        through: { attributes: [] },
+      },
+    ],
+  });
 }
 
 export async function updateSpeedboat(id, updates, userId) {
@@ -388,7 +407,7 @@ export async function touchSpeedboat(id) {
  * Recompute and update progress
  */
 export async function recomputeProgress(id) {
-  const speedboat = await getSpeedboatById(id);
+  const speedboat = await getSpeedboat(id);
   if (!speedboat) {
     const err = new Error("Speedboat not found");
     err.status = 404;

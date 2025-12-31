@@ -3,7 +3,7 @@ import * as reflectionService from "../services/reflection.service.js";
 
 export const create = async (req, res) => {
   try {
-    const item = await reflectionService.createReflection(req.body);
+    const item = await reflectionService.createReflection(req.body, req.user.id);
     return ApiResponse.created(res, item);
   } catch (err) {
     return ApiResponse.error(res, err.message);

@@ -33,7 +33,7 @@ export default (sequelize) => {
                 as: "reflections",
                 onDelete: "CASCADE",
             });
-            
+
             Speedboat.hasMany(models.Message, {
                 foreignKey: "speedboat_id",
                 as: "messages",
@@ -71,6 +71,10 @@ export default (sequelize) => {
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV4,
                 primaryKey: true,
+            },
+            userId: {
+                type: DataTypes.UUID,
+                allowNull: false,
             },
             name: { type: DataTypes.STRING, allowNull: false },
             guiding_spirit: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },

@@ -5,7 +5,7 @@ const { Milestone, Speedboat } = models;
 
 export async function createMilestone({ speedboat_id, title, due_date, status }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb || sb.userId !== userId) {
+  if (!sb || String(sb.userId) !== String(userId)) {
     const err = new Error("Speedboat not found or not owned by you");
     err.status = 404;
     throw err;
