@@ -2,10 +2,10 @@ import models from "../models/index.js";
 import { touchSpeedboat, recomputeProgress } from "./speedboat.service.js";
 const { KPI, Speedboat } = models;
 
-export async function createKPI({ speedboat_id, name, baseline, target, current, unit }) {
+export async function createKPI({ speedboat_id, name, baseline, target, current, unit }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb) {
-    const err = new Error("Speedboat not found");
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
     err.status = 404;
     throw err;
   }
@@ -15,7 +15,14 @@ export async function createKPI({ speedboat_id, name, baseline, target, current,
   return kpi;
 }
 
-export async function listKPIs({ page = 1, limit = 25, speedboat_id }) {
+export async function listKPIs({ page = 1, limit = 25, speedboat_id }, userId) {
+
+  const sb = await Speedboat.findByPk(speedboat_id);
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
+    err.status = 404;
+    throw err;
+  }
   const offset = (page - 1) * limit;
   const where = {};
   if (speedboat_id) where.speedboat_id = speedboat_id;

@@ -8,6 +8,8 @@ export async function createStatusNote(speedboatId, payload, userId) {
   const sb = await Speedboat.findByPk(speedboatId);
   if (!sb) throw new Error("Speedboat not found");
 
+  if (sb.userId !== userId) throw new Error("You are not the owner of this speedboat");
+
   return StatusHistory.create({
     speedboat_id: speedboatId,
     status: payload.status,

@@ -19,10 +19,17 @@ import budgetResourceModel from "./budgetResource.model.js";
 const sequelize = new Sequelize(env.DB_URL, {
   dialect: "postgres",
   logging: false,
+
+  ssl: true, // required by pg
+
   dialectOptions: {
-    ssl: false, // 
-  }
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
 });
+
 
 // Initialize models
 const models = {

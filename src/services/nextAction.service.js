@@ -2,10 +2,10 @@ import models from "../models/index.js";
 import { touchSpeedboat } from "./speedboat.service.js";
 const { NextAction, Speedboat } = models;
 
-export async function createNextAction({ speedboat_id, task, owner, due_date, status }) {
+export async function createNextAction({ speedboat_id, task, owner, due_date, status }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb) {
-    const err = new Error("Speedboat not found");
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
     err.status = 404;
     throw err;
   }
@@ -14,7 +14,13 @@ export async function createNextAction({ speedboat_id, task, owner, due_date, st
   return na;
 }
 
-export async function listNextActions({ page = 1, limit = 25, speedboat_id }) {
+export async function listNextActions({ page = 1, limit = 25, speedboat_id }, userId) {
+  const sb = await Speedboat.findByPk(speedboat_id);
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you"); 
+    err.status = 404;
+    throw err;
+  }
   const offset = (page - 1) * limit;
   const where = {};
   if (speedboat_id) where.speedboat_id = speedboat_id;

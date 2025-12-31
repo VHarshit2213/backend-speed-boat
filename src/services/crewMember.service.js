@@ -3,11 +3,12 @@ import { Op } from "sequelize";
 import { touchSpeedboat } from "./speedboat.service.js";
 const { CrewMember, Speedboat } = models;
 
-export async function createCrewMember({ speedboat_id, name, email }) {
+export async function createCrewMember({ speedboat_id, name, email }, userId) {
   // validate speedboat existence
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb) {
-    const err = new Error("Speedboat not found");
+  
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
     err.status = 404;
     throw err;
   }
@@ -16,7 +17,15 @@ export async function createCrewMember({ speedboat_id, name, email }) {
   return cm;
 }
 
-export async function listCrewMembers({ page = 1, limit = 25, speedboat_id }) {
+export async function listCrewMembers({ page = 1, limit = 25, speedboat_id }, userId) {
+ const sb = await Speedboat.findByPk(speedboat_id);
+  
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
+    err.status = 404;
+    throw err;
+  }
+
   const offset = (page - 1) * limit;
   const where = {};
   if (speedboat_id) where.speedboat_id = speedboat_id;

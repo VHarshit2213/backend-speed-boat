@@ -3,10 +3,10 @@ import dayjs from "dayjs";
 import { touchSpeedboat, recomputeProgress } from "./speedboat.service.js";
 const { Milestone, Speedboat } = models;
 
-export async function createMilestone({ speedboat_id, title, due_date, status }) {
+export async function createMilestone({ speedboat_id, title, due_date, status }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb) {
-    const err = new Error("Speedboat not found");
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
     err.status = 404;
     throw err;
   }
@@ -16,7 +16,13 @@ export async function createMilestone({ speedboat_id, title, due_date, status })
   return m;
 }
 
-export async function listMilestones({ page = 1, limit = 25, speedboat_id }) {
+export async function listMilestones({ page = 1, limit = 25, speedboat_id }, userId) {
+  const sb = await Speedboat.findByPk(speedboat_id);
+  if (!sb || sb.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
+    err.status = 404;
+    throw err;
+  }
   const offset = (page - 1) * limit;
   const where = {};
   if (speedboat_id) where.speedboat_id = speedboat_id;

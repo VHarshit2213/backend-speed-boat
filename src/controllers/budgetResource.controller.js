@@ -3,14 +3,14 @@ import * as svc from "../services/budgetResource.service.js";
 
 export const create = async (req, res) => {
   try {
-    const data = await svc.createBudgetResource(req.body);
+    const data = await svc.createBudgetResource(req.body, req.user.id);
     return ApiResponse.created(res, data);
   } catch (err) { return ApiResponse.error(res, err.message); }
 };
 
 export const list = async (req, res) => {
   try {
-    const data = await svc.listBudgetResources(req.query);
+    const data = await svc.listBudgetResources(req.query, req.user.id);
     return ApiResponse.ok(res, data);
   } catch (err) { return ApiResponse.error(res, err.message); }
 };

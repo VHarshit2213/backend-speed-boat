@@ -3,14 +3,14 @@ import * as svc from "../services/message.service.js";
 
 export const create = async (req, res) => {
   try {
-    const data = await svc.createMessage(req.body);
+    const data = await svc.createMessage(req.body, req.user.id);
     return ApiResponse.created(res, data);
   } catch (err) { return ApiResponse.error(res, err.message); }
 };
 
 export const list = async (req, res) => {
   try {
-    const data = await svc.listMessages(req.query);
+    const data = await svc.listMessages(req.query, req.user.id);
     return ApiResponse.ok(res, data);
   } catch (err) { return ApiResponse.error(res, err.message); }
 };

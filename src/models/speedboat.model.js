@@ -60,6 +60,8 @@ export default (sequelize) => {
                 foreignKey: "depends_on_speedboat_id",
                 otherKey: "speedboat_id",
             });
+
+            Speedboat.belongsTo(models.User, { foreignKey: "userId", as: "owner" });
         }
     }
 

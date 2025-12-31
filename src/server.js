@@ -53,20 +53,20 @@ const server = http.createServer(app);
     await connectPostgres(); // connect to Postgres first
 
     // Run initial update on startup
-    console.log('Running initial speedboat updates...');
-    await updateAllSpeedboats();
-    console.log('Initial speedboat updates completed.');
+    // console.log('Running initial speedboat updates...');
+    // await updateAllSpeedboats();
+    // console.log('Initial speedboat updates completed.');
 
-    // Schedule nightly updates at 1 AM
-    cron.schedule('0 1 * * *', async () => {
-      try {
-        console.log('Starting nightly speedboat updates...');
-        await updateAllSpeedboats();
-        console.log('Nightly speedboat updates completed.');
-      } catch (err) {
-        console.error('Error in nightly speedboat updates:', err);
-      }
-    });
+    // // Schedule nightly updates at 1 AM
+    // cron.schedule('0 1 * * *', async () => {
+    //   try {
+    //     console.log('Starting nightly speedboat updates...');
+    //     await updateAllSpeedboats();
+    //     console.log('Nightly speedboat updates completed.');
+    //   } catch (err) {
+    //     console.error('Error in nightly speedboat updates:', err);
+    //   }
+    // });
 
     server.listen(env.port, "0.0.0.0", () => {
       console.log(`✅ Server running on http://192.168.1.66:${env.port}`);

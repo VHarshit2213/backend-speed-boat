@@ -5,7 +5,8 @@ import * as speedboatService from "../services/speedboat.service.js";
 // Create
 export const create = async (req, res) => {
   try {
-    const result = await speedboatService.createSpeedboat(req.body);
+    const payload = { ...req.body, userId: req.user.id };
+    const result = await speedboatService.createSpeedboat(payload);
     return ApiResponse.created(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -16,7 +17,7 @@ export const create = async (req, res) => {
 export const list = async (req, res) => {
   try {
     const { q, mentor, sponsor, health, progressMin, progressMax, captionName, page = 1, size = 25 } = req.query;
-    const result = await speedboatService.listSpeedboats({ q, mentor, sponsor, health, progressMin, progressMax, captionName, page, size });
+    const result = await speedboatService.listSpeedboats({ q, mentor, sponsor, health, progressMin, progressMax, captionName, page, size, userId: req.user.id });
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -26,7 +27,7 @@ export const list = async (req, res) => {
 // Get single
 export const getById = async (req, res) => {
   try {
-    const result = await speedboatService.getSpeedboatById(req.params.id);
+    const result = await speedboatService.getSpeedboatById(req.params.id, req.user.id);
     if (!result) return ApiResponse.notFound(res, "Speedboat not found");
     return ApiResponse.ok(res, result);
   } catch (err) {
@@ -37,7 +38,7 @@ export const getById = async (req, res) => {
 // Update
 export const update = async (req, res) => {
   try {
-    const result = await speedboatService.updateSpeedboat(req.params.id, req.body);
+    const result = await speedboatService.updateSpeedboat(req.params.id, req.body, req.user.id);
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -47,7 +48,7 @@ export const update = async (req, res) => {
 // Delete
 export const remove = async (req, res) => {
   try {
-    await speedboatService.deleteSpeedboat(req.params.id);
+    await speedboatService.deleteSpeedboat(req.params.id, req.user.id);
     return ApiResponse.ok(res, "Deleted Successfully...");
   } catch (err) {
     return ApiResponse.error(res, err.message);

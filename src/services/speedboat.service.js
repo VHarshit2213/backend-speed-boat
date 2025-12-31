@@ -91,6 +91,7 @@ export async function createSpeedboat(payload) {
     nextActions,
     reflections,
     dependencies,
+    userId,
     ...rest
   } = payload;
 
@@ -101,6 +102,7 @@ export async function createSpeedboat(payload) {
     challenge,
     measurement_of_success,
     current_status,
+    userId,
   });
 
   if (Array.isArray(crew)) {
@@ -141,11 +143,11 @@ export async function createSpeedboat(payload) {
   }
 
   // return full object
-  return getSpeedboatById(speedboat.id);
+  return getSpeedboatById(speedboat.id, userId);
 }
-export async function listSpeedboats({ q, health, progressMin, progressMax, mentorName, page = 1, size = 10 }) {
+export async function listSpeedboats({ q, health, progressMin, progressMax, mentorName, page = 1, size = 10, userId }) {
   const offset = (page - 1) * size;
-  const where = {};
+  const where = { userId };
   if (q) {
     where[Op.or] = [
       { mentor: { [Op.iLike]: `%${q}%` } },
@@ -191,8 +193,8 @@ export async function listSpeedboats({ q, health, progressMin, progressMax, ment
   return { items: rows, total: count, page, size };
 }
 
-export async function getSpeedboatById(id) {
-  return Speedboat.findByPk(id, {
+export async function getSpeedboatById(id, userId) {
+  const speedboat = await Speedboat.findByPk(id, {
     include: [
       { model: CrewMember, as: "crew" },
       { model: KPI, as: "kpis" },
@@ -208,12 +210,14 @@ export async function getSpeedboatById(id) {
       },
     ],
   });
+   if (!speedboat || speedboat.userId !== userId) { const err = new Error("Speedboat not found or not owned by you"); err.status = 404; throw err; }
+  return speedboat;
 }
 
-export async function updateSpeedboat(id, updates) {
+export async function updateSpeedboat(id, updates, userId) {
   const speedboat = await Speedboat.findByPk(id);
-  if (!speedboat) {
-    const err = new Error("Speedboat not found");
+  if (!speedboat || speedboat.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
     err.status = 404;
     throw err;
   }
@@ -288,7 +292,13 @@ export async function updateSpeedboat(id, updates) {
   return getSpeedboatById(id);
 }
 
-export async function deleteSpeedboat(id) {
+export async function deleteSpeedboat(id, userId) {
+  const speedboat = await Speedboat.findByPk(id);
+  if (!speedboat || speedboat.userId !== userId) {
+    const err = new Error("Speedboat not found or not owned by you");
+    err.status = 404;
+    throw err;
+  }
   await Speedboat.destroy({ where: { id } });
 }
 
