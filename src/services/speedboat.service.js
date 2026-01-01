@@ -1,5 +1,5 @@
 import models from "../models/index.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import dayjs from "dayjs";
 
 const {
@@ -108,8 +108,8 @@ export async function createSpeedboat(payload) {
   if (Array.isArray(crew)) {
     const items = crew.map((c) => {
       if (typeof c === "string") return { speedboat_id: speedboat.id, name: c };
-      const { name, email } = c || {};
-      return { speedboat_id: speedboat.id, name, email };
+      const { name, slack_id } = c || {};
+      return { speedboat_id: speedboat.id, name, slack_id };
     });
     await CrewMember.bulkCreate(items);
   }

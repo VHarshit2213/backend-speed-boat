@@ -3,7 +3,7 @@ import { Op } from "sequelize";
 import { touchSpeedboat } from "./speedboat.service.js";
 const { CrewMember, Speedboat } = models;
 
-export async function createCrewMember({ speedboat_id, name, email }, userId) {
+export async function createCrewMember({ speedboat_id, name, slack_id }, userId) {
   // validate speedboat existence
   const sb = await Speedboat.findByPk(speedboat_id);
   
@@ -12,7 +12,7 @@ export async function createCrewMember({ speedboat_id, name, email }, userId) {
     err.status = 404;
     throw err;
   }
-  const cm = await CrewMember.create({ speedboat_id, name, email });
+  const cm = await CrewMember.create({ speedboat_id, name, slack_id });
   await touchSpeedboat(speedboat_id);
   return cm;
 }

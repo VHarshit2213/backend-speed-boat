@@ -20,7 +20,7 @@ export default (sequelize) => {
       },
       speedboat_id: { type: DataTypes.UUID, allowNull: false },
       name: { type: DataTypes.STRING, allowNull: false },
-      email: { type: DataTypes.STRING, allowNull: true },
+      slack_id: { type: DataTypes.STRING, allowNull: true },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     },
