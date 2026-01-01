@@ -19,7 +19,7 @@ export default (sequelize) => {
       email: { type: DataTypes.STRING, allowNull: false, unique: true },
       mobile: { type: DataTypes.STRING, allowNull: false, unique: true }, 
       profileImage: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: true, // user might not have uploaded a picture yet
       },
       role: {
@@ -30,7 +30,7 @@ export default (sequelize) => {
         defaultValue:"user",
       },
 
-      password: { type: DataTypes.STRING, allowNull: false },
+      password: { type: DataTypes.TEXT, allowNull: false },
     },
     { sequelize, modelName: "User" }
   );

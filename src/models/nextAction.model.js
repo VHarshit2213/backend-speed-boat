@@ -15,10 +15,10 @@ export default (sequelize) => {
     {
       id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
       speedboat_id: { type: DataTypes.UUID, allowNull: false },
-      task: { type: DataTypes.STRING, allowNull: false },
-      owner: { type: DataTypes.STRING, allowNull: false },
+      task: { type: DataTypes.TEXT, allowNull: false },
+      owner: { type: DataTypes.TEXT, allowNull: false },
       due_date: DataTypes.DATE,
-      status: { type: DataTypes.STRING(20), defaultValue: "Open" },
+      status: { type: DataTypes.TEXT, defaultValue: "Open" },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: {
         type: DataTypes.DATE,

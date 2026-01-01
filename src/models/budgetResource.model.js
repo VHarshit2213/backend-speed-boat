@@ -18,8 +18,8 @@ export default (sequelize) => {
       week_start: { type: DataTypes.DATEONLY, allowNull: false },
       budget_spent: { type: DataTypes.DECIMAL, allowNull: true },
       budget_remaining: { type: DataTypes.DECIMAL, allowNull: true },
-      resources_used: { type: DataTypes.STRING, allowNull: true },
-      resources_needed: { type: DataTypes.STRING, allowNull: true },
+      resources_used: { type: DataTypes.TEXT, allowNull: true },
+      resources_needed: { type: DataTypes.TEXT, allowNull: true },
       notes: { type: DataTypes.TEXT, allowNull: true },
     },
     {
