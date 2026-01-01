@@ -451,6 +451,7 @@ export async function recomputeProgress(id) {
   const progress = await computeProgressForSpeedboat(speedboat);
   speedboat.progress = progress;
   await speedboat.save();
+  await recomputeHealth(speedboat.id);
   return { id: speedboat.id, progress };
 }
 
