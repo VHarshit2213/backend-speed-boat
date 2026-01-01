@@ -145,27 +145,62 @@ export async function createSpeedboat(payload) {
   // return full object
   return getSpeedboat(speedboat.id);
 }
-export async function listSpeedboats({ q, health, progressMin, progressMax, mentorName, page = 1, size = 10, userId }) {
+export async function listSpeedboats({
+  q,
+  navigator,
+  health,
+  progressMin,
+  progressMax,
+  page = 1,
+  size = 10,
+  userId,
+}) {
   const offset = (page - 1) * size;
+
   const where = { userId };
+
+  //  Search in sponsor + navigators (ARRAY)
   if (q) {
     where[Op.or] = [
-      { mentor: { [Op.iLike]: `%${q}%` } },
       { sponsor: { [Op.iLike]: `%${q}%` } },
+      Sequelize.literal(`
+        EXISTS (
+          SELECT 1
+          FROM unnest("Speedboat"."navigators") AS n
+          WHERE n ILIKE '%${q}%'
+        )
+      `),
     ];
   }
 
+  //  Health filter
   if (health) {
     where.health = health;
   }
-  if (progressMin !== undefined) {
-    where.progress = { ...where.progress, [Op.gte]: Number(progressMin) };
+
+  //  Progress range filter
+  if (progressMin !== undefined || progressMax !== undefined) {
+    where.progress = {};
+    if (progressMin !== undefined) {
+      where.progress[Op.gte] = Number(progressMin);
+    }
+    if (progressMax !== undefined) {
+      where.progress[Op.lte] = Number(progressMax);
+    }
   }
-  if (progressMax !== undefined) {
-    where.progress = { ...where.progress, [Op.lte]: Number(progressMax) };
-  }
-  if (mentorName) {
-    where.mentor = { [Op.iLike]: `%${mentorName}%` };
+
+  //  Navigator filter (ARRAY search)
+  if (navigator) {
+    where[Op.and] = [
+      ...(where[Op.and] || []),
+      Sequelize.literal(`
+        EXISTS (
+          SELECT 1
+          FROM unnest("Speedboat"."navigators") AS n
+          WHERE n ILIKE '%${navigator}%'
+        )
+      `),
+    ];
   }
 
   const { rows, count } = await Speedboat.findAndCountAll({
@@ -308,7 +343,7 @@ export async function updateSpeedboat(id, updates, userId) {
     if (items.length) await Dependency.bulkCreate(items);
   }
 
-  return getSpeedboatById(id);
+  return getSpeedboat(id);
 }
 
 export async function deleteSpeedboat(id, userId) {
@@ -423,7 +458,7 @@ export async function recomputeProgress(id) {
  * recompute health & save
  */
 export async function recomputeHealth(id) {
-  const speedboat = await getSpeedboatById(id);
+  const speedboat = await getSpeedboat(id);
   if (!speedboat) {
     const err = new Error("Speedboat not found");
     err.status = 404;

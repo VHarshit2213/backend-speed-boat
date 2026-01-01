@@ -81,7 +81,7 @@ export default (sequelize) => {
             challenge: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
             measurement_of_success: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
             current_status: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
-            captain: DataTypes.STRING,
+            mentor: DataTypes.STRING,
             sponsor: DataTypes.STRING,
             navigators: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true },
             health: {

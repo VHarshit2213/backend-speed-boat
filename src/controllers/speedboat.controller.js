@@ -16,8 +16,8 @@ export const create = async (req, res) => {
 // List (with associations)
 export const list = async (req, res) => {
   try {
-    const { q, mentor, sponsor, health, progressMin, progressMax, captionName, page = 1, size = 25 } = req.query;
-    const result = await speedboatService.listSpeedboats({ q, mentor, sponsor, health, progressMin, progressMax, captionName, page, size, userId: req.user.id });
+    const { q, navigator, health, progressMin, progressMax, page = 1, size = 25 } = req.query;
+    const result = await speedboatService.listSpeedboats({ q, navigator, health, progressMin, progressMax, page, size, userId: req.user.id });
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -27,8 +27,8 @@ export const list = async (req, res) => {
 // Get single
 export const getById = async (req, res) => {
   try {
-    const result = await speedboatService.getSpeedboatById(req.params.id, req.user.id);
-    if (!result) return ApiResponse.notFound(res, "Speedboat not found");
+    const result = await speedboatService.getSpeedboat(req.params.id, req.user.id);
+    if (!result) return ApiResponse.error(res, "Speedboat not found");
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
