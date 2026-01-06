@@ -27,7 +27,7 @@ export const list = async (req, res) => {
 // Get single
 export const getById = async (req, res) => {
   try {
-    const result = await speedboatService.getSpeedboat(req.params.id, req.user.id);
+    const result = await speedboatService.getSpeedboatById(req.params.id, req.user.id);
     if (!result) return ApiResponse.error(res, "Speedboat not found");
     return ApiResponse.ok(res, result);
   } catch (err) {

@@ -245,6 +245,28 @@ export async function getSpeedboatById(id, userId) {
       },
     ],
   });
+  
+  if (!speedboat) return null;
+
+  // sort included arrays by created_at (oldest → newest). Change compare to invert for newest first.
+  const sortByCreatedAt = (arr) => {
+    if (!Array.isArray(arr)) return;
+    arr.sort((a, b) => {
+      const da = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      return da - db;
+    });
+  };
+
+  sortByCreatedAt(speedboat.crew);
+  sortByCreatedAt(speedboat.kpis);
+  sortByCreatedAt(speedboat.milestones);
+  sortByCreatedAt(speedboat.nextActions);
+  sortByCreatedAt(speedboat.reflections);
+  sortByCreatedAt(speedboat.messages);
+  sortByCreatedAt(speedboat.budgetResources);
+  sortByCreatedAt(speedboat.dependsOn);
+
    if (!speedboat || speedboat.userId !== userId) { const err = new Error("Speedboat not found or not owned by you"); err.status = 404; throw err; }
   return speedboat;
 }
