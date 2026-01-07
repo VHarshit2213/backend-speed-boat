@@ -30,7 +30,7 @@ export async function listMilestones({ page = 1, limit = 25, speedboat_id }, use
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["due_date", "ASC"]],
+    order: [["created_at", "DESC"]],
   });
   return { items: rows, total: count, page, limit };
 }

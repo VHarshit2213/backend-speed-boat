@@ -33,7 +33,7 @@ export async function listCrewMembers({ page = 1, limit = 25, speedboat_id }, us
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["name", "ASC"]],
+    order: [["date", "ASC"]],
   });
   return { items: rows, total: count, page, limit };
 }

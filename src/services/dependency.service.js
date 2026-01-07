@@ -48,7 +48,7 @@ export async function listDependencies({ page = 1, limit = 25, speedboat_id }, u
       { model: Speedboat, as: "speedboat" },
       { model: Speedboat, as: "dependsOnSpeedboat" },
     ],
-    order: [["id", "ASC"]],
+    order: [["created_at", "DESC"]],
   });
   return { items: rows, total: count, page, limit };
 }

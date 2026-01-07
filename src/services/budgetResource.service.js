@@ -24,7 +24,7 @@ export async function listBudgetResources({ speedboat_id, page = 1, limit = 50 }
   if (speedboat_id) where.speedboat_id = speedboat_id;
 
   const { rows, count } = await BudgetResource.findAndCountAll({
-    where, order: [["week_start", "DESC"]], limit: Number(limit), offset: Number(offset)
+    where, order: [["created_at", "DESC"]], limit: Number(limit), offset: Number(offset)
   });
 
   return { items: rows, total: count, page, limit };
