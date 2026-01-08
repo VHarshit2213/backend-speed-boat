@@ -162,7 +162,7 @@ export async function listSpeedboats({
   //  Search in sponsor + navigators (ARRAY)
   if (q) {
     where[Op.or] = [
-      { sponsor: { [Op.iLike]: `%${q}%` } },
+      { name: { [Op.iLike]: `%${q}%` } },
       Sequelize.literal(`
         EXISTS (
           SELECT 1
