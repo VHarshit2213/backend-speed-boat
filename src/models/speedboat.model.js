@@ -61,6 +61,13 @@ export default (sequelize) => {
                 otherKey: "speedboat_id",
             });
 
+            Speedboat.belongsToMany(models.User, {
+                through: models.SpeedboatAccess,
+                foreignKey: "speedboat_id",
+                otherKey: "user_id",
+                as: "sharedUsers",
+            });
+
             Speedboat.belongsTo(models.User, { foreignKey: "userId", as: "owner" });
         }
     }

@@ -82,3 +82,52 @@ export const recomputeProgress = async (req, res) => {
     return ApiResponse.error(res, err.message);
   }
 };
+
+export const bulkShareSpeedboat = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userIds } = req.body;
+
+    const result = await speedboatService.bulkShareSpeedboat({
+      speedboatId: id,
+      userIds,
+      adminId: req.user.id,
+    });
+
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};
+
+
+export const listAccessibleSpeedboats = async (req, res) => {
+  try {
+    const result = await speedboatService.listAccessibleSpeedboats({
+      userId: req.user.id,
+      page: req.query.page,
+      size: req.query.size,
+    });
+
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};
+
+
+export const revokeSpeedboatAccess = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+
+    const result = await speedboatService.revokeSpeedboatAccess({
+      speedboatId: id,
+      userId,
+      adminId: req.user.id,
+    });
+
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};

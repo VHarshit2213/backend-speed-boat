@@ -19,3 +19,18 @@ export const remove = async (req, res) => {
   if (!user) return ApiResponse.error(res, 'User not found', 404);
   return ApiResponse.ok(res, { deleted: true });
 };
+
+export const listUsers = async (req, res) => {
+  try {
+    const result = await userService.listUsers({
+      q: req.query.q,
+      page: req.query.page,
+      size: req.query.size,
+      userId: req.user.id,
+    });
+
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};

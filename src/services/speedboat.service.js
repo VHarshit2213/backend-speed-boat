@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 
 const {
   Speedboat,
+  User,
   CrewMember,
   KPI,
   Milestone,
@@ -11,7 +12,8 @@ const {
   Reflection,
   Dependency,
   Message,
-  BudgetResource
+  BudgetResource,
+  SpeedboatAccess
 } = models;
 
 /**
@@ -156,59 +158,64 @@ export async function listSpeedboats({
   userId,
 }) {
   const offset = (page - 1) * size;
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const err = new Error("User not found");
+    err.status = 404;
+    throw err;
+  }
+  const role = user.role;
 
-  const where = { userId };
+  let where = {};
 
-  //  Search in sponsor + navigators (ARRAY)
-  if (q) {
+  if (role !== "admin") {
     where[Op.or] = [
-      { name: { [Op.iLike]: `%${q}%` } },
-      Sequelize.literal(`
-        EXISTS (
-          SELECT 1
-          FROM unnest("Speedboat"."navigators") AS n
-          WHERE n ILIKE '%${q}%'
-        )
-      `),
+      { userId }, // owned
+      {
+        id: {
+          [Op.in]: Sequelize.literal(`
+            (SELECT speedboat_id
+             FROM speedboat_access
+             WHERE user_id = '${userId}')
+          `),
+        },
+      },
     ];
   }
 
-  //  Health filter
-  if (health) {
-    where.health = health;
-  }
-
-  //  Progress range filter
-  if (progressMin !== undefined || progressMax !== undefined) {
-    where.progress = {};
-    if (progressMin !== undefined) {
-      where.progress[Op.gte] = Number(progressMin);
-    }
-    if (progressMax !== undefined) {
-      where.progress[Op.lte] = Number(progressMax);
-    }
-  }
-
-  //  Navigator filter (ARRAY search)
-  if (navigator) {
+  // 🔍 Search
+  if (q) {
     where[Op.and] = [
       ...(where[Op.and] || []),
-      Sequelize.literal(`
-        EXISTS (
-          SELECT 1
-          FROM unnest("Speedboat"."navigators") AS n
-          WHERE n ILIKE '%${navigator}%'
-        )
-      `),
+      {
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${q}%` } },
+          Sequelize.literal(`
+            EXISTS (
+              SELECT 1
+              FROM unnest("Speedboat"."navigators") AS n
+              WHERE n ILIKE '%${q}%'
+            )
+          `),
+        ],
+      },
     ];
+  }
+
+  if (health) where.health = health;
+
+  if (progressMin || progressMax) {
+    where.progress = {};
+    if (progressMin) where.progress[Op.gte] = Number(progressMin);
+    if (progressMax) where.progress[Op.lte] = Number(progressMax);
   }
 
   const { rows, count } = await Speedboat.findAndCountAll({
     where,
     limit: Number(size),
-    offset: Number(offset),
-    order: [["created_at", "DESC"]],
+    offset,
     distinct: true,
+    order: [["created_at", "DESC"]],
     include: [
       { model: CrewMember, as: "crew" },
       { model: KPI, as: "kpis" },
@@ -217,16 +224,13 @@ export async function listSpeedboats({
       { model: Reflection, as: "reflections" },
       { model: Message, as: "messages" },
       { model: BudgetResource, as: "budgetResources" },
-      {
-        model: Speedboat,
-        as: "dependsOn",
-        through: { attributes: [] },
-      },
+      { model: User, as: "sharedUsers", through: { attributes: [] } },
     ],
   });
 
   return { items: rows, total: count, page, size };
 }
+
 
 export async function getSpeedboatById(id, userId) {
   const speedboat = await Speedboat.findByPk(id, {
@@ -292,9 +296,42 @@ export async function getSpeedboat(id) {
 
 export async function updateSpeedboat(id, updates, userId) {
   const speedboat = await Speedboat.findByPk(id);
-  if (!speedboat || speedboat.userId !== userId) {
-    const err = new Error("Speedboat not found or not owned by you");
+
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
     err.status = 404;
+    throw err;
+  }
+
+  // Permission check (OWNER OR SHARED USER)
+  const isOwner = speedboat.userId === userId;
+
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const err = new Error("User not found");
+    err.status = 404;
+    throw err;
+  }
+
+  let hasAccess = false;
+
+  // if (!isOwner) {
+  //   const access = await SpeedboatAccess.findOne({
+  //     where: {
+  //       speedboat_id: id,
+  //       user_id: userId,
+  //     },
+  //   });
+  //   hasAccess = !!access;
+  // }
+
+  if (user.role === "admin") {
+    hasAccess = true;
+  }
+
+  if (!isOwner && !hasAccess) {
+    const err = new Error("You do not have access to update this speedboat");
+    err.status = 403;
     throw err;
   }
 
@@ -525,4 +562,140 @@ export async function refreshMilestoneStatuses(speedboatId) {
 
   // return updated list
   return Milestone.findAll({ where: { speedboat_id: speedboatId } });
+}
+
+
+export async function bulkShareSpeedboat({ speedboatId, userIds, adminId }) {
+
+  console.log("bulkShareSpeedboat called with:", { speedboatId, userIds, adminId });
+
+  const speedboat = await Speedboat.findByPk(speedboatId);
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const user = await User.findByPk(adminId);
+  console.log("user.....",user);
+  if (!user || user.role !== "admin") {
+    const err = new Error("Only admins can share speedboats");
+    err.status = 403;
+    throw err;
+  }
+  const records = userIds.map((userId) => ({
+    speedboat_id: speedboatId,
+    user_id: userId,
+    granted_by: adminId,
+  }));
+
+  await SpeedboatAccess.bulkCreate(records, {
+    ignoreDuplicates: true,
+  });
+
+  return { sharedCount: userIds.length };
+}
+
+export async function listAccessibleSpeedboats({
+  userId,
+  page = 1,
+  size = 25,
+}) {
+  const offset = (page - 1) * size;
+
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const err = new Error("User not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const role = user.role;
+
+  let where = {};
+
+  // Admin → all speedboats
+  if (role !== "admin") {
+    where[Op.or] = [
+      { userId }, // owner
+      {
+        id: {
+          [Op.in]: Sequelize.literal(`
+            (SELECT speedboat_id
+             FROM speedboat_access
+             WHERE user_id = '${userId}')
+          `),
+        },
+      },
+    ];
+  }
+
+  const { rows, count } = await Speedboat.findAndCountAll({
+    where,
+    limit: Number(size),
+    offset,
+    order: [["created_at", "DESC"]],
+    distinct: true,
+    include: [
+      { model: User, as: "owner", attributes: ["id", "fullName", "email"] },
+      { model: User, as: "sharedUsers", through: { attributes: [] } },
+    ],
+  });
+
+  return {
+    items: rows,
+    total: count,
+    page,
+    size,
+  };
+}
+
+
+export async function revokeSpeedboatAccess({
+  speedboatId,
+  userId,
+  adminId,
+}) {
+  //  Check speedboat exists
+  const speedboat = await Speedboat.findByPk(speedboatId);
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const adminUser = await User.findByPk(adminId);
+  if (!adminUser || adminUser.role !== "admin") {
+    const err = new Error("Only admins can revoke access");
+    err.status = 403;
+    throw err;
+  }
+
+  //  Prevent revoking owner access
+  if (speedboat.userId === userId) {
+    const err = new Error("Cannot revoke access from the owner");
+    err.status = 400;
+    throw err;
+  }
+
+  // Delete access
+  const deleted = await SpeedboatAccess.destroy({
+    where: {
+      speedboat_id: speedboatId,
+      user_id: userId,
+    },
+  });
+
+  if (!deleted) {
+    const err = new Error("User does not have access to this speedboat");
+    err.status = 404;
+    throw err;
+  }
+
+  return {
+    message: "Access revoked successfully",
+    speedboatId,
+    userId,
+    revokedBy: adminId,
+  };
 }

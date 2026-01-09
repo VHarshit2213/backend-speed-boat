@@ -10,6 +10,7 @@ import dependencyRoutes from "./dependency.routes.js";
 import statusHistoryRoutes from "./statusHistory.routes.js";
 import budgetRoutes from "./budgetResource.routes.js";
 import messageRoutes from "./message.routes.js";
+import userRoutes from "./user.routes.js";
 const router = Router();
 
 router.use('/auth', authRoutes);
@@ -23,6 +24,7 @@ router.use("/dependencies", dependencyRoutes);
 router.use("/speedboat", statusHistoryRoutes);
 router.use("/budget-resources", budgetRoutes);
 router.use("/messages", messageRoutes);
+router.use("/users", userRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });

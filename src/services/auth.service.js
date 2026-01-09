@@ -15,7 +15,7 @@ const signToken = (user) =>
   });
 
 //  Register
-export async function register({ fullName, email, mobile, password }) {
+export async function register({ fullName, email, mobile, password, role }) {
   // Check if user exists (manual validation before hitting DB constraint)
   const exists = await User.findOne({
     where: {
@@ -43,6 +43,7 @@ export async function register({ fullName, email, mobile, password }) {
       email,
       mobile,
       password: hashedPassword,
+      role: role || "user",
     });
 
     const token = signToken(user);

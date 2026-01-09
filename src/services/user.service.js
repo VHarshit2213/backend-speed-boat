@@ -1,4 +1,5 @@
 import models from "../models/index.js";
+import { Op } from "sequelize";
 import bcrypt from "bcrypt";
 const { User } = models; 
 
@@ -50,3 +51,45 @@ export const updateUser = async (id, payload, files, req) => {
 
 
 export const deleteUser = async (id) => User.findByPk(id).then(user => user.destroy());
+
+export async function listUsers({
+  q,
+  page = 1,
+  size = 25,
+  userId,
+}) {
+  const offset = (page - 1) * size;
+
+  const user = await User.findByPk(userId);
+  if (!user) throw new Error("User not found");
+  const role = user.role;
+  if (role !== "admin") throw new Error("Only admins can list users");
+
+  const where = {};
+
+  // exclude users with role "admin"
+  where.role = { [Op.ne]: "admin" };
+
+  if (q) {
+    where[Op.or] = [
+      { fullName: { [Op.iLike]: `%${q}%` } },
+      { email: { [Op.iLike]: `%${q}%` } },
+      { mobile: { [Op.iLike]: `%${q}%` } },
+    ];
+  }
+
+  const { rows, count } = await User.findAndCountAll({
+    where,
+    attributes: ["id", "fullName", "email", "mobile", "role"],
+    limit: Number(size),
+    offset,
+    order: [["createdAt", "DESC"]],
+  });
+
+  return {
+    items: rows,
+    total: count,
+    page,
+    size,
+  };
+}
