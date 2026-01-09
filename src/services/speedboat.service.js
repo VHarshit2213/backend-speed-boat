@@ -271,7 +271,9 @@ export async function getSpeedboatById(id, userId) {
   sortByCreatedAt(speedboat.budgetResources);
   sortByCreatedAt(speedboat.dependsOn);
 
-   if (!speedboat || speedboat.userId !== userId) { const err = new Error("Speedboat not found or not owned by you"); err.status = 404; throw err; }
+  //  if (!speedboat || speedboat.userId !== userId) {
+  //    const err = new Error("Speedboat not found or not owned by you");
+  //     err.status = 404; throw err; }
   return speedboat;
 }
 
