@@ -4,11 +4,11 @@ const { Reflection, Speedboat } = models;
 
 export async function createReflection({ speedboat_id, achievements, challenges, learnings, next_actions, needs }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb || sb.userId !== userId) {
-    const err = new Error("Speedboat not found or not owned by you");
-    err.status = 404;
-    throw err;
-  }
+  // if (!sb || sb.userId !== userId) {
+  //   const err = new Error("Speedboat not found or not owned by you");
+  //   err.status = 404;
+  //   throw err;
+  // }
   const r = await Reflection.create({ speedboat_id, achievements, challenges, learnings, next_actions, needs });
   await touchSpeedboat(speedboat_id);
   return r;
@@ -17,11 +17,11 @@ export async function createReflection({ speedboat_id, achievements, challenges,
 export async function listReflections({ page = 1, limit = 25, speedboat_id }, userId) {
 
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb || sb.userId !== userId) {
-    const err = new Error("Speedboat not found or not owned by you");
-    err.status = 404;
-    throw err;
-  }
+  // if (!sb || sb.userId !== userId) {
+  //   const err = new Error("Speedboat not found or not owned by you");
+  //   err.status = 404;
+  //   throw err;
+  // }
 
   const offset = (page - 1) * limit;
   const where = {};

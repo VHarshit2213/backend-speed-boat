@@ -7,11 +7,11 @@ export async function createCrewMember({ speedboat_id, name, slack_id }, userId)
   // validate speedboat existence
   const sb = await Speedboat.findByPk(speedboat_id);
   
-  if (!sb || sb.userId !== userId) {
-    const err = new Error("Speedboat not found or not owned by you");
-    err.status = 404;
-    throw err;
-  }
+  // if (!sb || sb.userId !== userId) {
+  //   const err = new Error("Speedboat not found or not owned by you");
+  //   err.status = 404;
+  //   throw err;
+  // }
   const cm = await CrewMember.create({ speedboat_id, name, slack_id });
   await touchSpeedboat(speedboat_id);
   return cm;
@@ -20,11 +20,11 @@ export async function createCrewMember({ speedboat_id, name, slack_id }, userId)
 export async function listCrewMembers({ page = 1, limit = 25, speedboat_id }, userId) {
  const sb = await Speedboat.findByPk(speedboat_id);
   
-  if (!sb || sb.userId !== userId) {
-    const err = new Error("Speedboat not found or not owned by you");
-    err.status = 404;
-    throw err;
-  }
+  // if (!sb || sb.userId !== userId) {
+  //   const err = new Error("Speedboat not found or not owned by you");
+  //   err.status = 404;
+  //   throw err;
+  // }
 
   const offset = (page - 1) * limit;
   const where = {};

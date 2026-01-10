@@ -5,7 +5,7 @@ const { BudgetResource, Speedboat } = models;
 
 export async function createBudgetResource(payload, userId) {
   const sb = await Speedboat.findByPk(payload.speedboat_id);
-   if (!sb || sb.userId !== userId) { const err = new Error("Speedboat not found or not owned by you"); err.status = 404; throw err; }
+  //  if (!sb || sb.userId !== userId) { const err = new Error("Speedboat not found or not owned by you"); err.status = 404; throw err; }
 
   return BudgetResource.create(payload);
 }
@@ -13,11 +13,11 @@ export async function createBudgetResource(payload, userId) {
 export async function listBudgetResources({ speedboat_id, page = 1, limit = 50 }, userId) {
 
   const sb = await Speedboat.findByPk(speedboat_id);
-  if (!sb || sb.userId !== userId) {
-    const err = new Error("Speedboat not found or not owned by you");
-    err.status = 404;
-    throw err;
-  }
+  // if (!sb || sb.userId !== userId) {
+  //   const err = new Error("Speedboat not found or not owned by you");
+  //   err.status = 404;
+  //   throw err;
+  // }
 
   const offset = (page - 1) * limit;
   const where = {};
