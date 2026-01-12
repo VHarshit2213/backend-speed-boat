@@ -20,6 +20,8 @@ export default (sequelize) => {
       due_date: DataTypes.DATE,
       status: { type: DataTypes.TEXT, defaultValue: "Open" },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      started_at: DataTypes.DATE,
+      completed_at: DataTypes.DATE,
       updated_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

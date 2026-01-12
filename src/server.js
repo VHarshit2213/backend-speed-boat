@@ -2,6 +2,7 @@ import http from "http";
 import app from "./app.js"; // your Express app
 import { env } from "./config/env.js";
 import { connectPostgres } from "./db/sequelize.js";
+import { Op } from "sequelize";
 import cron from "node-cron";
 import models from "./models/index.js";
 import { refreshMilestoneStatuses, computeProgressForSpeedboat, computeHealthForSpeedboat } from "./services/speedboat.service.js";
@@ -68,11 +69,43 @@ const server = http.createServer(app);
     //   }
     // });
 
-    	const PORT = Number(env.PORT) || 4000;
+    cron.schedule("0 1 * * *", async () => {
+      const now = new Date();
 
-	server.listen(PORT, "0.0.0.0", () => {
-  	console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
-	});
+      try {
+        //  Pending → In Progress (start time reached)
+        await NextAction.update(
+          { status: "In Progress" },
+          {
+            where: {
+              status: "Pending",
+              started_at: { [Op.lte]: now },
+              completed_at: null,
+            },
+          }
+        );
+
+        // In Progress / Pending → Delayed (deadline passed)
+        await NextAction.update(
+          { status: "Delayed" },
+          {
+            where: {
+              deadline: { [Op.lt]: now },
+              completed_at: null,
+              status: { [Op.ne]: "Completed" },
+            },
+          }
+        );
+      } catch (err) {
+        console.error("Error updating NextAction statuses:", err);
+      }
+    });
+
+    const PORT = Number(env.PORT) || 4000;
+
+    server.listen(PORT, "0.0.0.0", () => {
+      console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
+    });
 
   } catch (err) {
     console.error("❌ Failed to start:", err);
