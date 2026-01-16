@@ -145,7 +145,11 @@ export async function createSpeedboat(payload) {
   }
 
   // return full object
-  return getSpeedboat(speedboat.id);
+  const newSpeedBoat = await getSpeedboat(speedboat.id);
+  refreshMilestoneStatuses(newSpeedBoat.id);
+  computeHealthForSpeedboat(newSpeedBoat);
+  computeProgressForSpeedboat(newSpeedBoat);
+  return newSpeedBoat;
 }
 export async function listSpeedboats({
   q,
@@ -249,7 +253,7 @@ export async function getSpeedboatById(id, userId) {
       },
     ],
   });
-  
+
   if (!speedboat) return null;
 
   // sort included arrays by created_at (oldest → newest). Change compare to invert for newest first.
@@ -473,6 +477,7 @@ export async function computeProgressForSpeedboat(speedboat) {
     "at risk": 20,
     "blocked": 0,
     "Blocked": 0,
+  
   };
 
   if (milestones) {
@@ -579,7 +584,7 @@ export async function bulkShareSpeedboat({ speedboatId, userIds, adminId }) {
   }
 
   const user = await User.findByPk(adminId);
-  console.log("user.....",user);
+  console.log("user.....", user);
   if (!user || user.role !== "admin") {
     const err = new Error("Only admins can share speedboats");
     err.status = 403;
