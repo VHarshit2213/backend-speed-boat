@@ -33,7 +33,6 @@ export default (sequelize) => {
         type: DataTypes.ENUM(
           "admin",
           "crew",
-          "user",
           "captain"
         ),
         defaultValue: "user",

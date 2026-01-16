@@ -43,7 +43,7 @@ export async function register({ fullName, email, mobile, password, role }) {
       email,
       mobile,
       password: hashedPassword,
-      role: role || "user",
+      role: role || "captain",
     });
 
     const token = signToken(user);
