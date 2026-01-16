@@ -331,11 +331,11 @@ export async function updateSpeedboat(id, updates, userId) {
     hasAccess = true;
   }
 
-  if (!isOwner && !hasAccess) {
-    const err = new Error("You do not have access to update this speedboat");
-    err.status = 403;
-    throw err;
-  }
+  // if (!isOwner && !hasAccess) {
+  //   const err = new Error("You do not have access to update this speedboat");
+  //   err.status = 403;
+  //   throw err;
+  // }
 
   const {
     guiding_spirit,
