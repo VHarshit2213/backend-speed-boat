@@ -131,3 +131,35 @@ export const revokeSpeedboatAccess = async (req, res) => {
     return ApiResponse.error(res, err.message);
   }
 };
+
+export const uploadFiles = async (req, res) => {
+  try {
+    // Ensure speedboat exists
+    const speedboat = await speedboatService.getSpeedboat(req.params.id);
+    if (!speedboat) return ApiResponse.error(res, "Speedboat not found");
+
+    if (!req.files || req.files.length === 0) {
+      return ApiResponse.error(res, "No files uploaded");
+    }
+
+    const files = req.files.map((f) => ({
+      originalName: f.originalname,
+      fileName: f.filename,
+      mimeType: f.mimetype,
+      size: f.size,
+      // Windows paths -> normalize to forward slashes for URLs
+      path: f.path.replace(/\\/g, "/"),
+      url: `${req.protocol}://${req.get("host")}/uploads/${f.filename}`,
+    }));
+
+    // persist files metadata into speedboat.files
+    const savedFiles = await speedboatService.addFilesToSpeedboat(speedboat.id, files);
+
+    // update speedboat touched timestamp
+    await speedboatService.touchSpeedboat(speedboat.id);
+
+    return ApiResponse.ok(res, { files: savedFiles });
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};

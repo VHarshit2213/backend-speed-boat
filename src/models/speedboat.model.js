@@ -114,6 +114,10 @@ export default (sequelize) => {
                 type: DataTypes.DATE,
                 defaultValue: DataTypes.NOW,
             },
+            files:{
+                type: DataTypes.ARRAY(DataTypes.JSONB),
+                allowNull: true
+            }
         },
         {
             sequelize,

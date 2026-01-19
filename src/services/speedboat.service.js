@@ -501,7 +501,27 @@ export async function computeProgressForSpeedboat(speedboat) {
  * Touch speedboat updated_at
  */
 export async function touchSpeedboat(id) {
-  await Speedboat.update({ id }, { where: { id } });
+  await Speedboat.update({ updated_at: new Date() }, { where: { id } });
+}
+
+/**
+ * Append files metadata to speedboat.files (JSONB array) and save
+ */
+export async function addFilesToSpeedboat(speedboatId, files = []) {
+  const speedboat = await Speedboat.findByPk(speedboatId);
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const existing = Array.isArray(speedboat.files) ? speedboat.files : [];
+  const updated = existing.concat(files);
+
+  speedboat.files = updated;
+  await speedboat.save();
+
+  return files;
 }
 
 /**
