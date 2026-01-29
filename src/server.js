@@ -25,7 +25,7 @@ async function updateAllSpeedboats() {
     ],
   });
   for (const speedboat of speedboats) {
-    await refreshMilestoneStatuses(speedboat.id);
+    // await refreshMilestoneStatuses(speedboat.id);
     // Refetch with updated milestones
     const updatedSpeedboat = await Speedboat.findByPk(speedboat.id, {
       include: [

@@ -17,67 +17,63 @@ const {
 } = models;
 
 /**
- * Health barometer logic per uploaded spec.
- * Rules summarized:
- *  - On Track: progress >= 60 AND no overdue milestones AND KPIs trending toward target
- *  - Pending: progress 30-59 OR 1 milestone at-risk OR minor KPI drift
- *  - At Risk: progress < 30 OR multiple overdue milestones OR KPI moving away OR manual captain flag
+ * Compute frontend health status based ONLY on KPI performance.
+ *
+ * Status meanings:
+ * - Done      : All KPIs performing very strongly
+ * - On Track  : KPIs meeting targets
+ * - Pending   : KPIs lagging but recoverable
+ * - At Risk   : KPIs failing or regressing
  */
 export async function computeHealthForSpeedboat(speedboat) {
-  // speedboat may be plain object or sequelize instance with includes
-  const progress = Number(speedboat.progress || 0);
-  const manualOverride = !!speedboat.manual_health_override;
-  if (manualOverride) return speedboat.health || "Pending";
+  // Manual override always wins
+  if (speedboat.manual_health_override) {
+    return speedboat.health || "Pending";
+  }
 
-  // fetch KPIs & milestones if not present
-  const [kpis, milestones] = await Promise.all([
-    speedboat.kpis ? speedboat.kpis : KPI.findAll({ where: { speedboat_id: speedboat.id } }),
-    speedboat.milestones ? speedboat.milestones : Milestone.findAll({ where: { speedboat_id: speedboat.id } }),
-  ]);
+  const kpis =
+    speedboat.kpis ??
+    await KPI.findAll({ where: { speedboat_id: speedboat.id } });
 
-  // KPIs trending heuristic: count KPIs where current is moving toward target
-  let kpiToward = 0, kpiAway = 0;
-  for (const k of kpis || []) {
+  if (!kpis || kpis.length === 0) return "Pending";
+
+  let hasAtRisk = false;
+  let hasPending = false;
+  let allExcellent = true;
+
+  for (const k of kpis) {
+    if (k.isCompleted) continue;
     if (k.current == null || k.target == null || k.baseline == null) continue;
-    const baseline = Number(k.baseline), target = Number(k.target), current = Number(k.current);
-    // If target > baseline (higher is better)
+
+    const baseline = Number(k.baseline);
+    const target = Number(k.target);
+    const current = Number(k.current);
+
+    let pct = 0;
+
     if (target > baseline) {
-      if (current >= baseline && current <= target) {
-        if (current >= baseline && current >= ((baseline + target) / 2)) kpiToward++;
-        else kpiToward += 0.5;
-      } else if (current > target) kpiToward++;
-      else kpiAway++;
-    } else {
-      // target < baseline (lower is better)
-      if (current <= baseline && current >= target) {
-        if (current <= ((baseline + target) / 2)) kpiToward++;
-        else kpiToward += 0.5;
-      } else if (current < target) kpiToward++;
-      else kpiAway++;
+      pct = ((current - baseline) / (target - baseline)) * 100;
+    } else if (target < baseline) {
+      pct = ((baseline - current) / (baseline - target)) * 100;
+    }
+
+    pct = Math.max(0, Math.min(100, pct));
+
+    if (pct < 40) {
+      hasAtRisk = true;
+      allExcellent = false;
+    } else if (pct < 70) {
+      hasPending = true;
+      allExcellent = false;
+    } else if (pct < 85) {
+      allExcellent = false;
     }
   }
 
-  // milestones overdue/at-risk
-  const now = dayjs();
-  let overdueCount = 0, atRiskCount = 0;
-  for (const m of milestones || []) {
-    if (!m.due_date) continue;
-    const due = dayjs(m.due_date);
-    if (m.status === "Done" || m.status === "On Track") continue;
-    if (due.isBefore(now, "day")) {
-      const daysOver = now.diff(due, "day");
-      if (daysOver >= 3) overdueCount++;
-      else if (daysOver >= 0) atRiskCount++;
-    } else {
-      // not overdue
-    }
-  }
-
-  // Decide health
-  if (progress >= 60 && overdueCount === 0 && kpiAway === 0) return "On Track";
-  if (progress < 30 || overdueCount >= 2 || kpiAway > 0) return "At Risk";
-  // otherwise Pending (default catch-all)
-  return "Pending";
+  if (hasAtRisk) return "At Risk";
+  if (hasPending) return "Pending";
+  if (allExcellent) return "Done";
+  return "On Track";
 }
 
 /* CRUD / listing */
@@ -146,9 +142,12 @@ export async function createSpeedboat(payload) {
 
   // return full object
   const newSpeedBoat = await getSpeedboat(speedboat.id);
-  refreshMilestoneStatuses(newSpeedBoat.id);
-  computeHealthForSpeedboat(newSpeedBoat);
-  computeProgressForSpeedboat(newSpeedBoat);
+  // refreshMilestoneStatuses(newSpeedBoat.id);
+  const health = await computeHealthForSpeedboat(newSpeedBoat);
+  const progress = await computeProgressForSpeedboat(newSpeedBoat);
+  newSpeedBoat.health = health;
+  newSpeedBoat.progress = progress;
+  await newSpeedBoat.save();
   return newSpeedBoat;
 }
 export async function listSpeedboats({
@@ -422,79 +421,56 @@ export async function deleteSpeedboat(id, userId) {
 }
 
 /**
- * Compute progress based on KPIs and milestones
- * Progress is the percentage of successful KPIs and milestones out of total.
- * A KPI is successful if its progress reaches 100%.
- * A milestone is successful if status is 'done'.
+ * Compute progress based ONLY on KPI progress percentages.
+ * Progress reflects numerical advancement toward targets.
+ *
+ * Formula:
+ * Progress (%) = Average of all KPI progress percentages
  */
 export async function computeProgressForSpeedboat(speedboat) {
-  // Get KPIs & milestones (same as before)
-  const [kpis, milestones] = await Promise.all([
-    speedboat.kpis ? speedboat.kpis : KPI.findAll({ where: { speedboat_id: speedboat.id } }),
-    speedboat.milestones ? speedboat.milestones : Milestone.findAll({ where: { speedboat_id: speedboat.id } }),
-  ]);
+  const kpis =
+    speedboat.kpis ??
+    await KPI.findAll({ where: { speedboat_id: speedboat.id } });
 
-  const progressValues = [];
+  if (!kpis || kpis.length === 0) return 0;
 
-  // --- KPI PROGRESS NOW USES REAL PERCENT, NOT ONLY 100 ---
-  if (kpis) {
-    for (const k of kpis) {
-      // If KPI is marked as completed, it contributes 100% to progress
-      if (k.isCompleted) {
-        progressValues.push(100);
-        continue;
-      }
+  let total = 0;
+  let count = 0;
 
-      if (k.current == null || k.target == null || k.baseline == null) continue;
-
-      const baseline = Number(k.baseline);
-      const target = Number(k.target);
-      const current = Number(k.current);
-
-      let pct = 0;
-
-      if (target > baseline) {
-        // higher is better
-        pct = ((current - baseline) / (target - baseline)) * 100;
-      } else if (target < baseline) {
-        // lower is better
-        pct = ((baseline - current) / (baseline - target)) * 100;
-      } else {
-        pct = current === target ? 100 : 0;
-      }
-
-      pct = Math.max(0, Math.min(100, pct));
-      progressValues.push(pct);
+  for (const k of kpis) {
+    if (k.isCompleted) {
+      total += 100;
+      count++;
+      continue;
     }
+
+    if (k.current == null || k.target == null || k.baseline == null) continue;
+
+    const baseline = Number(k.baseline);
+    const target = Number(k.target);
+    const current = Number(k.current);
+
+    let pct = 0;
+
+    if (target > baseline) {
+      // higher is better
+      pct = ((current - baseline) / (target - baseline)) * 100;
+    } else if (target < baseline) {
+      // lower is better
+      pct = ((baseline - current) / (baseline - target)) * 100;
+    }
+
+    pct = Math.max(0, Math.min(100, pct));
+
+    total += pct;
+    count++;
   }
 
-  // --- MILESTONES NOW GET SCORES (80 for On Track, etc.) ---
-  const milestoneScore = {
-    "done": 100,
-    "Done": 100,
-    "On Track": 70,
-    "At Risk": 20,
-    "at risk": 20,
-    "blocked": 0,
-    "Blocked": 0,
-  
-  };
+  if (count === 0) return 0;
 
-  if (milestones) {
-    for (const m of milestones) {
-      const key = (m.status || "").trim();
-      const score = milestoneScore[key] ?? 0;
-      progressValues.push(score);
-    }
-  }
-
-  // No KPIs or milestones → default 0
-  if (progressValues.length === 0) return 0;
-
-  // --- FINAL AVERAGE ---
-  const avg = progressValues.reduce((sum, v) => sum + v, 0) / progressValues.length;
-  return Math.round(avg);
+  return Math.round(total / count);
 }
+
 
 
 /**
@@ -535,9 +511,10 @@ export async function recomputeProgress(id) {
     throw err;
   }
   const progress = await computeProgressForSpeedboat(speedboat);
+  const health = await computeHealthForSpeedboat(speedboat);
   speedboat.progress = progress;
+  speedboat.health = health;
   await speedboat.save();
-  await recomputeHealth(speedboat.id);
   return { id: speedboat.id, progress };
 }
 
@@ -564,32 +541,32 @@ export async function recomputeHealth(id) {
  * - at-risk if 3-7 days overdue
  * - done when marked completed (status == 'done')
  */
-export async function refreshMilestoneStatuses(speedboatId) {
-  const milestones = await Milestone.findAll({ where: { speedboat_id: speedboatId } });
-  const now = dayjs();
+// export async function refreshMilestoneStatuses(speedboatId) {
+//   const milestones = await Milestone.findAll({ where: { speedboat_id: speedboatId } });
+//   const now = dayjs();
 
-  for (const m of milestones) {
-    if (m.status === "Done") continue;
-    if (!m.due_date) {
-      m.status = "Pending";
-      await m.save();
-      continue;
-    }
-    const due = dayjs(m.due_date);
-    if (due.isAfter(now, "day")) {
-      m.status = "On Track";
-    } else {
-      const daysOver = now.diff(due, "day");
-      if (daysOver >= 3 && daysOver <= 7) m.status = "At Risk";
-      else if (daysOver > 7) m.status = "At Risk"; // treat >7 as at-risk (client rule can be adjusted)
-      else m.status = "At Risk"; // 0-2 days overdue => at-risk
-    }
-    await m.save();
-  }
+//   for (const m of milestones) {
+//     if (m.status === "Done") continue;
+//     if (!m.due_date) {
+//       m.status = "Pending";
+//       await m.save();
+//       continue;
+//     }
+//     const due = dayjs(m.due_date);
+//     if (due.isAfter(now, "day")) {
+//       m.status = "On Track";
+//     } else {
+//       const daysOver = now.diff(due, "day");
+//       if (daysOver >= 3 && daysOver <= 7) m.status = "At Risk";
+//       else if (daysOver > 7) m.status = "At Risk"; // treat >7 as at-risk (client rule can be adjusted)
+//       else m.status = "At Risk"; // 0-2 days overdue => at-risk
+//     }
+//     await m.save();
+//   }
 
   // return updated list
-  return Milestone.findAll({ where: { speedboat_id: speedboatId } });
-}
+//   return Milestone.findAll({ where: { speedboat_id: speedboatId } });
+// }
 
 
 export async function bulkShareSpeedboat({ speedboatId, userIds, adminId }) {

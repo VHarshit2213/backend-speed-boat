@@ -1,6 +1,6 @@
 import models from "../models/index.js";
 import dayjs from "dayjs";
-import { touchSpeedboat, recomputeProgress, refreshMilestoneStatuses} from "./speedboat.service.js";
+import { touchSpeedboat} from "./speedboat.service.js";
 const { Milestone, Speedboat } = models;
 
 export async function createMilestone({ speedboat_id, title, due_date, status }, userId) {
@@ -12,8 +12,6 @@ export async function createMilestone({ speedboat_id, title, due_date, status },
   // }
   const m = await Milestone.create({ speedboat_id, title, due_date, status });
   await touchSpeedboat(speedboat_id);
-  await refreshMilestoneStatuses(speedboat_id);
-  await recomputeProgress(speedboat_id);
   return m;
 }
 
@@ -50,8 +48,7 @@ export async function updateMilestone(id, updates) {
   // optional auto status calculation if due_date changed and status not explicitly set
   await m.update(updates);
   await touchSpeedboat(m.speedboat_id);
-  await recomputeProgress(m.speedboat_id);
-  await refreshMilestoneStatuses(m.speedboat_id);
+  // await refreshMilestoneStatuses(m.speedboat_id);
   return m;
 }
 
@@ -61,7 +58,6 @@ export async function deleteMilestone(id) {
     const speedboatId = m.speedboat_id;
     await Milestone.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
-    await recomputeProgress(speedboatId);
   }
 }
 
