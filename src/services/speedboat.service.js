@@ -541,32 +541,32 @@ export async function recomputeHealth(id) {
  * - at-risk if 3-7 days overdue
  * - done when marked completed (status == 'done')
  */
-// export async function refreshMilestoneStatuses(speedboatId) {
-//   const milestones = await Milestone.findAll({ where: { speedboat_id: speedboatId } });
-//   const now = dayjs();
+export async function refreshMilestoneStatuses(speedboatId) {
+  const milestones = await Milestone.findAll({ where: { speedboat_id: speedboatId } });
+  const now = dayjs();
 
-//   for (const m of milestones) {
-//     if (m.status === "Done") continue;
-//     if (!m.due_date) {
-//       m.status = "Pending";
-//       await m.save();
-//       continue;
-//     }
-//     const due = dayjs(m.due_date);
-//     if (due.isAfter(now, "day")) {
-//       m.status = "On Track";
-//     } else {
-//       const daysOver = now.diff(due, "day");
-//       if (daysOver >= 3 && daysOver <= 7) m.status = "At Risk";
-//       else if (daysOver > 7) m.status = "At Risk"; // treat >7 as at-risk (client rule can be adjusted)
-//       else m.status = "At Risk"; // 0-2 days overdue => at-risk
-//     }
-//     await m.save();
-//   }
+  for (const m of milestones) {
+    if (m.status === "Done") continue;
+    if (!m.due_date) {
+      m.status = "Pending";
+      await m.save();
+      continue;
+    }
+    const due = dayjs(m.due_date);
+    if (due.isAfter(now, "day")) {
+      m.status = "On Track";
+    } else {
+      const daysOver = now.diff(due, "day");
+      if (daysOver >= 3 && daysOver <= 7) m.status = "At Risk";
+      else if (daysOver > 7) m.status = "At Risk"; // treat >7 as at-risk (client rule can be adjusted)
+      else m.status = "At Risk"; // 0-2 days overdue => at-risk
+    }
+    await m.save();
+  }
 
   // return updated list
-//   return Milestone.findAll({ where: { speedboat_id: speedboatId } });
-// }
+  return Milestone.findAll({ where: { speedboat_id: speedboatId } });
+}
 
 
 export async function bulkShareSpeedboat({ speedboatId, userIds, adminId }) {
