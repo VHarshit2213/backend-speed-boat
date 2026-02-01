@@ -407,7 +407,18 @@ export async function updateSpeedboat(id, updates, userId) {
     if (items.length) await Dependency.bulkCreate(items);
   }
 
-  return getSpeedboat(id);
+  // Recompute derived fields based on latest KPIs
+  const refreshed = await getSpeedboat(id);
+  const progress = await computeProgressForSpeedboat(refreshed);
+  const health = await computeHealthForSpeedboat(refreshed);
+
+  refreshed.progress = progress;
+  if (!refreshed.manual_health_override) {
+    refreshed.health = health;
+  }
+  await refreshed.save();
+
+  return refreshed;
 }
 
 export async function deleteSpeedboat(id, userId) {

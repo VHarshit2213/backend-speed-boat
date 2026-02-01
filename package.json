@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "recompute": "node scripts/recompute-speedboats.js",
     "lint": "eslint .",
     "format": "prettier -w ."
   },
