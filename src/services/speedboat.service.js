@@ -1,6 +1,8 @@
 import models from "../models/index.js";
 import { Op, Sequelize } from "sequelize";
 import dayjs from "dayjs";
+import fs from "fs/promises";
+import path from "path";
 
 const {
   Speedboat,
@@ -13,7 +15,8 @@ const {
   Dependency,
   Message,
   BudgetResource,
-  SpeedboatAccess
+  SpeedboatAccess,
+  Document,
 } = models;
 
 /**
@@ -228,6 +231,7 @@ export async function listSpeedboats({
       { model: Message, as: "messages" },
       { model: BudgetResource, as: "budgetResources" },
       { model: User, as: "sharedUsers", through: { attributes: [] } },
+      { model: Document, as: "documents" },
     ],
   });
 
@@ -245,6 +249,7 @@ export async function getSpeedboatById(id, userId) {
       { model: Reflection, as: "reflections" },
       { model: Message, as: "messages" },
       { model: BudgetResource, as: "budgetResources" },
+      { model: Document, as: "documents" },
       {
         model: Speedboat,
         as: "dependsOn",
@@ -492,7 +497,7 @@ export async function touchSpeedboat(id) {
 }
 
 /**
- * Append files metadata to speedboat.files (JSONB array) and save
+ * Persist uploaded files as Document rows and keep speedboat.files in sync (legacy field)
  */
 export async function addFilesToSpeedboat(speedboatId, files = []) {
   const speedboat = await Speedboat.findByPk(speedboatId);
@@ -502,13 +507,83 @@ export async function addFilesToSpeedboat(speedboatId, files = []) {
     throw err;
   }
 
-  const existing = Array.isArray(speedboat.files) ? speedboat.files : [];
-  const updated = existing.concat(files);
+  // Normalize payload for Document table
+  const docsPayload = files.map((f) => ({
+    speedboat_id: speedboatId,
+    file_name: f.fileName || f.filename,
+    original_name: f.originalName || f.originalname,
+    mime_type: f.mimeType || f.mimetype,
+    size: f.size,
+    path: f.path,
+    url: f.url,
+  }));
 
-  speedboat.files = updated;
+  const createdDocs = await Document.bulkCreate(docsPayload, { returning: true });
+
+  // Legacy compatibility: mirror into speedboat.files
+  const existing = Array.isArray(speedboat.files) ? speedboat.files : [];
+  const docsMeta = createdDocs.map((d) => ({
+    id: d.id,
+    fileName: d.file_name,
+    originalName: d.original_name,
+    mimeType: d.mime_type,
+    size: d.size,
+    path: d.path,
+    url: d.url,
+  }));
+  speedboat.files = existing.concat(docsMeta);
   await speedboat.save();
 
-  return files;
+  return createdDocs;
+}
+
+/**
+ * Delete a document by ID and clean up disk + legacy files array.
+ */
+export async function deleteDocument(documentId, user) {
+  const document = await Document.findByPk(documentId);
+  if (!document) {
+    const err = new Error("Document not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const speedboat = await Speedboat.findByPk(document.speedboat_id);
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
+    err.status = 404;
+    throw err;
+  }
+
+  // Only owner or admin can delete
+  const isOwner = speedboat.userId === user.id;
+  const isAdmin = user?.role === "admin";
+  if (!isOwner && !isAdmin) {
+    const err = new Error("You do not have permission to delete this document");
+    err.status = 403;
+    throw err;
+  }
+
+  await document.destroy();
+
+  // Update legacy files array
+  const existing = Array.isArray(speedboat.files) ? speedboat.files : [];
+  speedboat.files = existing.filter((f) => f?.id !== document.id && f?.fileName !== document.file_name);
+  await speedboat.save();
+
+  // Attempt to delete from disk; ignore errors (e.g., file already gone)
+  if (document.path) {
+    const absolute = path.isAbsolute(document.path)
+      ? document.path
+      : path.join(process.cwd(), document.path);
+    try {
+      await fs.unlink(absolute);
+    } catch (_) {
+      // swallow file removal errors to avoid blocking API
+    }
+  }
+
+  return { deleted: true };
 }
 
 /**

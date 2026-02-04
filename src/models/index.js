@@ -16,6 +16,7 @@ import OtpModel from "./otp.model.js";
 import MessageModel from "./message.model.js";
 import budgetResourceModel from "./budgetResource.model.js";
 import speedboatAccess from "./speedboatAccess.js";
+import DocumentModel from "./document.model.js";
 
 // Init Sequelize
 //const sequelize = new Sequelize(env.DATABASE_URL, {
@@ -57,6 +58,7 @@ const models = {
   Message: MessageModel(sequelize),
   BudgetResource: budgetResourceModel(sequelize),
   SpeedboatAccess: speedboatAccess(sequelize),
+  Document: DocumentModel(sequelize),
 };
 
 // Apply associations

@@ -153,13 +153,35 @@ export const uploadFiles = async (req, res) => {
     }));
 
     // persist files metadata into speedboat.files
-    const savedFiles = await speedboatService.addFilesToSpeedboat(speedboat.id, files);
+    const savedDocs = await speedboatService.addFilesToSpeedboat(speedboat.id, files);
 
     // update speedboat touched timestamp
     await speedboatService.touchSpeedboat(speedboat.id);
 
-    return ApiResponse.ok(res, { files: savedFiles });
+    const documents = savedDocs.map((d) => ({
+      id: d.id,
+      fileName: d.file_name,
+      originalName: d.original_name,
+      mimeType: d.mime_type,
+      size: d.size,
+      path: d.path,
+      url: d.url,
+    }));
+
+    return ApiResponse.ok(res, { documents, files: documents });
   } catch (err) {
     return ApiResponse.error(res, err.message);
+  }
+};
+
+// Delete a document by its ID
+export const deleteDocument = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    await speedboatService.deleteDocument(documentId, req.user);
+
+    return ApiResponse.ok(res, { deleted: true });
+  } catch (err) {
+    return ApiResponse.error(res, err.message, err.status);
   }
 };

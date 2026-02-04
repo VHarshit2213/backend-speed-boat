@@ -36,4 +36,10 @@ router.post(
   asyncHandler(ctrl.uploadFiles)
 );
 
+// delete a document by its ID
+router.delete(
+  "/documents/:documentId",
+  asyncHandler(ctrl.deleteDocument)
+);
+
 export default router;

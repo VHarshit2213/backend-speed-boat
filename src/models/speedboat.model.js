@@ -46,6 +46,12 @@ export default (sequelize) => {
                 onDelete: "CASCADE",
             });
 
+            Speedboat.hasMany(models.Document, {
+                foreignKey: "speedboat_id",
+                as: "documents",
+                onDelete: "CASCADE",
+            });
+
             // Many-to-many self-reference (dependencies)
             Speedboat.belongsToMany(models.Speedboat, {
                 as: "dependsOn",
