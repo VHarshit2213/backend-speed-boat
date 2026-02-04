@@ -20,13 +20,13 @@ const {
 } = models;
 
 /**
- * Compute frontend health status based ONLY on KPI performance.
+ * Compute frontend health status based ONLY on average KPI progress.
  *
  * Status meanings:
- * - Done      : All KPIs performing very strongly
- * - On Track  : KPIs meeting targets
- * - Pending   : KPIs lagging but recoverable
- * - At Risk   : KPIs failing or regressing
+ * - Done      : Average progress = 100%
+ * - On Track  : Average progress >= 70%
+ * - Pending   : Average progress >= 40%
+ * - At Risk   : Average progress < 40%
  */
 export async function computeHealthForSpeedboat(speedboat) {
   // Manual override always wins
@@ -40,43 +40,12 @@ export async function computeHealthForSpeedboat(speedboat) {
 
   if (!kpis || kpis.length === 0) return "Pending";
 
-  let hasAtRisk = false;
-  let hasPending = false;
-  let allExcellent = true;
+  const progress = await computeProgressForSpeedboat(speedboat);
 
-  for (const k of kpis) {
-    if (k.isCompleted) continue;
-    if (k.current == null || k.target == null || k.baseline == null) continue;
-
-    const baseline = Number(k.baseline);
-    const target = Number(k.target);
-    const current = Number(k.current);
-
-    let pct = 0;
-
-    if (target > baseline) {
-      pct = ((current - baseline) / (target - baseline)) * 100;
-    } else if (target < baseline) {
-      pct = ((baseline - current) / (baseline - target)) * 100;
-    }
-
-    pct = Math.max(0, Math.min(100, pct));
-
-    if (pct < 40) {
-      hasAtRisk = true;
-      allExcellent = false;
-    } else if (pct < 70) {
-      hasPending = true;
-      allExcellent = false;
-    } else if (pct < 85) {
-      allExcellent = false;
-    }
-  }
-
-  if (hasAtRisk) return "At Risk";
-  if (hasPending) return "Pending";
-  if (allExcellent) return "Done";
-  return "On Track";
+  if (progress >= 100) return "Done";
+  if (progress >= 70) return "On Track";
+  if (progress >= 40) return "Pending";
+  return "At Risk";
 }
 
 /* CRUD / listing */
