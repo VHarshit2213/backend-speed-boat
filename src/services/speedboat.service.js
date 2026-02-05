@@ -23,7 +23,6 @@ const {
  * Compute frontend health status based ONLY on average KPI progress.
  *
  * Status meanings:
- * - Done      : Average progress = 100%
  * - On Track  : Average progress >= 70%
  * - Pending   : Average progress >= 40%
  * - At Risk   : Average progress < 40%
@@ -42,7 +41,6 @@ export async function computeHealthForSpeedboat(speedboat) {
 
   const progress = await computeProgressForSpeedboat(speedboat);
 
-  if (progress >= 100) return "Done";
   if (progress >= 70) return "On Track";
   if (progress >= 40) return "Pending";
   return "At Risk";
@@ -406,11 +404,12 @@ export async function deleteSpeedboat(id, userId) {
 }
 
 /**
- * Compute progress based ONLY on KPI progress percentages.
- * Progress reflects numerical advancement toward targets.
+ * Compute progress based ONLY on KPI achievement percentages.
+ * Progress reflects current/target ratio (baseline ignored).
  *
  * Formula:
- * Progress (%) = Average of all KPI progress percentages
+ * KPI% = (current / target) * 100
+ * Progress (%) = Average of all KPI%
  */
 export async function computeProgressForSpeedboat(speedboat) {
   const kpis =
@@ -423,29 +422,15 @@ export async function computeProgressForSpeedboat(speedboat) {
   let count = 0;
 
   for (const k of kpis) {
-    if (k.isCompleted) {
-      total += 100;
-      count++;
-      continue;
-    }
+    if (k.current == null || k.target == null) continue;
 
-    if (k.current == null || k.target == null || k.baseline == null) continue;
-
-    const baseline = Number(k.baseline);
     const target = Number(k.target);
     const current = Number(k.current);
 
-    let pct = 0;
+    if (!Number.isFinite(target) || target === 0) continue;
+    if (!Number.isFinite(current)) continue;
 
-    if (target > baseline) {
-      // higher is better
-      pct = ((current - baseline) / (target - baseline)) * 100;
-    } else if (target < baseline) {
-      // lower is better
-      pct = ((baseline - current) / (baseline - target)) * 100;
-    }
-
-    pct = Math.max(0, Math.min(100, pct));
+    const pct = (current / target) * 100;
 
     total += pct;
     count++;
