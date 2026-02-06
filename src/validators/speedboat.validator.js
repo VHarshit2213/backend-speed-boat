@@ -7,6 +7,7 @@ const kpiSchema = z.object({
   target: z.number().optional().nullable(),
   current: z.number().optional().nullable(),
   unit: z.string().optional().nullable(),
+  position: z.number().int().nonnegative().optional(),
 });
 
 const milestoneSchema = z.object({

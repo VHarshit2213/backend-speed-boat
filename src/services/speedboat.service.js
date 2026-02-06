@@ -83,7 +83,14 @@ export async function createSpeedboat(payload) {
   }
 
   if (Array.isArray(kpis)) {
-    const items = kpis.map(k => ({ ...k, speedboat_id: speedboat.id }));
+    const items = kpis.map((k, idx) => {
+      const { position, ...rest } = k || {};
+      return {
+        ...rest,
+        position: position != null ? position : idx,
+        speedboat_id: speedboat.id,
+      };
+    });
     await KPI.bulkCreate(items);
   }
 
@@ -231,6 +238,11 @@ export async function getSpeedboatById(id, userId) {
   const sortByCreatedAt = (arr) => {
     if (!Array.isArray(arr)) return;
     arr.sort((a, b) => {
+      const hasPosA = Number.isFinite(a?.position);
+      const hasPosB = Number.isFinite(b?.position);
+      if (hasPosA && hasPosB && a.position !== b.position) {
+        return a.position - b.position;
+      }
       const da = a?.created_at ? new Date(a.created_at).getTime() : 0;
       const db = b?.created_at ? new Date(b.created_at).getTime() : 0;
       return da - db;
@@ -253,7 +265,7 @@ export async function getSpeedboatById(id, userId) {
 }
 
 export async function getSpeedboat(id) {
-  return Speedboat.findByPk(id, {
+  const speedboat = await Speedboat.findByPk(id, {
     include: [
       { model: CrewMember, as: "crew" },
       { model: KPI, as: "kpis" },
@@ -269,6 +281,33 @@ export async function getSpeedboat(id) {
       },
     ],
   });
+
+  if (!speedboat) return null;
+
+  const sortByCreatedAt = (arr) => {
+    if (!Array.isArray(arr)) return;
+    arr.sort((a, b) => {
+      const hasPosA = Number.isFinite(a?.position);
+      const hasPosB = Number.isFinite(b?.position);
+      if (hasPosA && hasPosB && a.position !== b.position) {
+        return a.position - b.position;
+      }
+      const da = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      return da - db;
+    });
+  };
+
+  sortByCreatedAt(speedboat.crew);
+  sortByCreatedAt(speedboat.kpis);
+  sortByCreatedAt(speedboat.milestones);
+  sortByCreatedAt(speedboat.nextActions);
+  sortByCreatedAt(speedboat.reflections);
+  sortByCreatedAt(speedboat.messages);
+  sortByCreatedAt(speedboat.budgetResources);
+  sortByCreatedAt(speedboat.dependsOn);
+
+  return speedboat;
 }
 
 export async function updateSpeedboat(id, updates, userId) {
@@ -348,7 +387,14 @@ export async function updateSpeedboat(id, updates, userId) {
 
   if (Array.isArray(kpis)) {
     await KPI.destroy({ where: { speedboat_id: id } });
-    const items = kpis.map(k => ({ ...k, speedboat_id: id }));
+    const items = kpis.map((k, idx) => {
+      const { position, ...rest } = k || {};
+      return {
+        ...rest,
+        position: position != null ? position : idx,
+        speedboat_id: id,
+      };
+    });
     if (items.length) await KPI.bulkCreate(items);
   }
 
@@ -509,10 +555,14 @@ export async function deleteDocument(documentId, user) {
     throw err;
   }
 
-  // Only owner or admin can delete
+  // Allow deletion by owner, admins, or anyone with explicit access (e.g., assigned captain)
   const isOwner = speedboat.userId === user.id;
   const isAdmin = user?.role === "admin";
-  if (!isOwner && !isAdmin) {
+  const hasAccess = await SpeedboatAccess.findOne({
+    where: { speedboat_id: speedboat.id, user_id: user.id },
+  });
+
+  if (!isOwner && !isAdmin && !hasAccess) {
     const err = new Error("You do not have permission to delete this document");
     err.status = 403;
     throw err;

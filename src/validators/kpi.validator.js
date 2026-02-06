@@ -7,7 +7,13 @@ export const createKPISchema = z.object({
   target: z.number().optional().nullable(),
   current: z.number().optional().nullable(),
   unit: z.string().optional().nullable(),
+  position: z.number().int().nonnegative().optional(),
   isCompleted: z.boolean().optional(),
 });
 
 export const updateKPISchema = createKPISchema.partial();
+
+export const reorderKPISchema = z.object({
+  speedboat_id: z.string().uuid(),
+  kpi_ids: z.array(z.string().uuid()).min(1),
+});
