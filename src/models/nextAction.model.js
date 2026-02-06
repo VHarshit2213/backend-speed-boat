@@ -19,6 +19,7 @@ export default (sequelize) => {
       owner: { type: DataTypes.TEXT, allowNull: false },
       due_date: DataTypes.DATE,
       status: { type: DataTypes.TEXT, defaultValue: "Open" },
+      position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       started_at: DataTypes.DATE,
       completed_at: DataTypes.DATE,

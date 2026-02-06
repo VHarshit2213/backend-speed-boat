@@ -47,3 +47,13 @@ export const remove = async (req, res) => {
     return ApiResponse.error(res, err.message);
   }
 };
+
+export const reorder = async (req, res) => {
+  try {
+    const { speedboat_id, milestone_ids } = req.body;
+    const items = await milestoneService.reorderMilestones(speedboat_id, milestone_ids);
+    return ApiResponse.ok(res, { items });
+  } catch (err) {
+    return ApiResponse.error(res, err.message, err.status || 500);
+  }
+};

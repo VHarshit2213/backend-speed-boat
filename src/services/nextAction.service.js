@@ -1,9 +1,9 @@
 import models from "../models/index.js";
 import { touchSpeedboat } from "./speedboat.service.js";
-const { NextAction, Speedboat } = models;
+const { NextAction, Speedboat, sequelize } = models;
 
 export async function createNextAction(
-  { speedboat_id, task, owner, started_at, due_date },
+  { speedboat_id, task, owner, started_at, due_date, position },
   userId
 ) {
   const sb = await Speedboat.findByPk(speedboat_id);
@@ -19,6 +19,12 @@ export async function createNextAction(
     status = "In Progress";
   }
 
+  let resolvedPosition = position;
+  if (resolvedPosition == null) {
+    const maxPos = await NextAction.max("position", { where: { speedboat_id } });
+    resolvedPosition = Number.isFinite(maxPos) ? Number(maxPos) + 1 : 0;
+  }
+
   const na = await NextAction.create({
     speedboat_id,
     task,
@@ -26,6 +32,7 @@ export async function createNextAction(
     started_at,
     due_date,
     status,
+    position: resolvedPosition,
   });
 
   await touchSpeedboat(speedboat_id);
@@ -47,7 +54,10 @@ export async function listNextActions({ page = 1, limit = 25, speedboat_id }, us
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["created_at", "DESC"]],
+    order: [
+      ["position", "ASC"],
+      ["created_at", "ASC"],
+    ],
   });
   return { items: rows, total: count, page, limit };
 }
@@ -78,4 +88,58 @@ export async function deleteNextAction(id) {
     await NextAction.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
+}
+
+export async function reorderNextActions(speedboat_id, next_action_ids = []) {
+  const speedboat = await Speedboat.findByPk(speedboat_id);
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const existing = await NextAction.findAll({ where: { speedboat_id } });
+  const existingIds = new Set(existing.map((a) => a.id));
+
+  const seen = new Set();
+  for (const id of next_action_ids) {
+    if (seen.has(id)) {
+      const err = new Error("Duplicate next action id in order payload");
+      err.status = 400;
+      throw err;
+    }
+    seen.add(id);
+    if (!existingIds.has(id)) {
+      const err = new Error("Next action does not belong to this speedboat");
+      err.status = 400;
+      throw err;
+    }
+  }
+
+  if (next_action_ids.length !== existing.length) {
+    const err = new Error("Order payload must include all next actions for this speedboat");
+    err.status = 400;
+    throw err;
+  }
+
+  await sequelize.transaction(async (t) => {
+    for (let i = 0; i < next_action_ids.length; i++) {
+      await NextAction.update(
+        { position: i },
+        { where: { id: next_action_ids[i], speedboat_id }, transaction: t }
+      );
+    }
+  });
+
+  await touchSpeedboat(speedboat_id);
+
+  const ordered = await NextAction.findAll({
+    where: { speedboat_id },
+    order: [
+      ["position", "ASC"],
+      ["created_at", "ASC"],
+    ],
+  });
+
+  return ordered;
 }

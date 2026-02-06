@@ -1,16 +1,22 @@
 import models from "../models/index.js";
 import dayjs from "dayjs";
 import { touchSpeedboat} from "./speedboat.service.js";
-const { Milestone, Speedboat } = models;
+const { Milestone, Speedboat, sequelize } = models;
 
-export async function createMilestone({ speedboat_id, title, due_date, status }, userId) {
+export async function createMilestone({ speedboat_id, title, due_date, status, position }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
   // if (!sb || String(sb.userId) !== String(userId)) {
   //   const err = new Error("Speedboat not found or not owned by you");
   //   err.status = 404;
   //   throw err;
   // }
-  const m = await Milestone.create({ speedboat_id, title, due_date, status });
+  let resolvedPosition = position;
+  if (resolvedPosition == null) {
+    const maxPos = await Milestone.max("position", { where: { speedboat_id } });
+    resolvedPosition = Number.isFinite(maxPos) ? Number(maxPos) + 1 : 0;
+  }
+
+  const m = await Milestone.create({ speedboat_id, title, due_date, status, position: resolvedPosition });
   await touchSpeedboat(speedboat_id);
   return m;
 }
@@ -29,7 +35,10 @@ export async function listMilestones({ page = 1, limit = 25, speedboat_id }, use
     where,
     limit: Number(limit),
     offset: Number(offset),
-    order: [["created_at", "DESC"]],
+    order: [
+      ["position", "ASC"],
+      ["created_at", "ASC"],
+    ],
   });
   return { items: rows, total: count, page, limit };
 }
@@ -59,6 +68,60 @@ export async function deleteMilestone(id) {
     await Milestone.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
+}
+
+export async function reorderMilestones(speedboat_id, milestone_ids = []) {
+  const speedboat = await Speedboat.findByPk(speedboat_id);
+  if (!speedboat) {
+    const err = new Error("Speedboat not found");
+    err.status = 404;
+    throw err;
+  }
+
+  const existing = await Milestone.findAll({ where: { speedboat_id } });
+  const existingIds = new Set(existing.map((m) => m.id));
+
+  const seen = new Set();
+  for (const id of milestone_ids) {
+    if (seen.has(id)) {
+      const err = new Error("Duplicate milestone id in order payload");
+      err.status = 400;
+      throw err;
+    }
+    seen.add(id);
+    if (!existingIds.has(id)) {
+      const err = new Error("Milestone does not belong to this speedboat");
+      err.status = 400;
+      throw err;
+    }
+  }
+
+  if (milestone_ids.length !== existing.length) {
+    const err = new Error("Order payload must include all milestones for this speedboat");
+    err.status = 400;
+    throw err;
+  }
+
+  await sequelize.transaction(async (t) => {
+    for (let i = 0; i < milestone_ids.length; i++) {
+      await Milestone.update(
+        { position: i },
+        { where: { id: milestone_ids[i], speedboat_id }, transaction: t }
+      );
+    }
+  });
+
+  await touchSpeedboat(speedboat_id);
+
+  const ordered = await Milestone.findAll({
+    where: { speedboat_id },
+    order: [
+      ["position", "ASC"],
+      ["created_at", "ASC"],
+    ],
+  });
+
+  return ordered;
 }
 
 /**

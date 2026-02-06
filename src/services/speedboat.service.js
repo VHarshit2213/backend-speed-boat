@@ -95,12 +95,26 @@ export async function createSpeedboat(payload) {
   }
 
   if (Array.isArray(milestones)) {
-    const items = milestones.map(m => ({ ...m, speedboat_id: speedboat.id }));
+    const items = milestones.map((m, idx) => {
+      const { position, ...rest } = m || {};
+      return {
+        ...rest,
+        position: position != null ? position : idx,
+        speedboat_id: speedboat.id,
+      };
+    });
     await Milestone.bulkCreate(items);
   }
 
   if (Array.isArray(nextActions)) {
-    const items = nextActions.map(n => ({ ...n, speedboat_id: speedboat.id }));
+    const items = nextActions.map((n, idx) => {
+      const { position, ...rest } = n || {};
+      return {
+        ...rest,
+        position: position != null ? position : idx,
+        speedboat_id: speedboat.id,
+      };
+    });
     await NextAction.bulkCreate(items);
   }
 
@@ -400,13 +414,27 @@ export async function updateSpeedboat(id, updates, userId) {
 
   if (Array.isArray(milestones)) {
     await Milestone.destroy({ where: { speedboat_id: id } });
-    const items = milestones.map(m => ({ ...m, speedboat_id: id }));
+    const items = milestones.map((m, idx) => {
+      const { position, ...rest } = m || {};
+      return {
+        ...rest,
+        position: position != null ? position : idx,
+        speedboat_id: id,
+      };
+    });
     if (items.length) await Milestone.bulkCreate(items);
   }
 
   if (Array.isArray(nextActions)) {
     await NextAction.destroy({ where: { speedboat_id: id } });
-    const items = nextActions.map(n => ({ ...n, speedboat_id: id }));
+    const items = nextActions.map((n, idx) => {
+      const { position, ...rest } = n || {};
+      return {
+        ...rest,
+        position: position != null ? position : idx,
+        speedboat_id: id,
+      };
+    });
     if (items.length) await NextAction.bulkCreate(items);
   }
 

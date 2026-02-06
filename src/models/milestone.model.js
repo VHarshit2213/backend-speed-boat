@@ -18,6 +18,7 @@ export default (sequelize) => {
       title: { type: DataTypes.TEXT, allowNull: false },
       due_date: DataTypes.DATE,
       status: { type: DataTypes.TEXT, defaultValue: "not achieved" },
+      position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: {
         type: DataTypes.DATE,

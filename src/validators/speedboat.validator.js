@@ -15,6 +15,7 @@ const milestoneSchema = z.object({
   title: z.string(),
   due_date: z.string().optional().nullable(),
   status: z.enum(["pending", "on-track", "at-risk", "done"]).optional(),
+  position: z.number().int().nonnegative().optional(),
 });
 
 const nextActionSchema = z.object({
@@ -23,6 +24,7 @@ const nextActionSchema = z.object({
   owner: z.string(),
   due_date: z.string().optional().nullable(),
   status: z.enum(["open", "in-progress", "done"]).optional(),
+  position: z.number().int().nonnegative().optional(),
 });
 
 export const createSpeedboatSchema = z.object({
