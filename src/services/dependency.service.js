@@ -45,8 +45,8 @@ export async function listDependencies({ page = 1, limit = 25, speedboat_id }, u
     limit: Number(limit),
     offset: Number(offset),
     include: [
-      { model: Speedboat, as: "speedboat" },
-      { model: Speedboat, as: "dependsOnSpeedboat" },
+      { model: Speedboat, as: "speedboat", required: false },
+      { model: Speedboat, as: "dependsOnSpeedboat", required: false },
     ],
     order: [["created_at", "DESC"]],
   });
@@ -58,5 +58,13 @@ export async function getDependencyById(id) {
 }
 
 export async function deleteDependency(id) {
-  await Dependency.destroy({ where: { id } });
+  const deleted = await Dependency.findByPk(id);
+  if (!deleted) {
+    const err = new Error("Dependency not found");
+    err.status = 404;
+    throw err;
+  }
+  //soft delete
+  await Dependency.update({ is_deleted: true }, { where: { id } });
+  // await Dependency.destroy({ where: { id } });
 }

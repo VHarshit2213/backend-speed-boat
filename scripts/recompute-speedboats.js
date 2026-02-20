@@ -11,7 +11,7 @@ async function main() {
   await sequelize.authenticate();
 
   const speedboats = await Speedboat.findAll({
-    include: [{ model: KPI, as: "kpis" }],
+    include: [{ model: KPI, as: "kpis", required: false }],
   });
 
   let updated = 0;

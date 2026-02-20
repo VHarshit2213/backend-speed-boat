@@ -25,9 +25,9 @@ export async function createStatusNote(speedboatId, payload, userId) {
 export async function getStatusDetails(speedboatId) {
   const sb = await Speedboat.findByPk(speedboatId, {
     include: [
-      { model: KPI, as: "kpis" },
-      { model: Milestone, as: "milestones" },
-      { model: CrewMember, as: "crew" }
+      { model: KPI, as: "kpis", required: false },
+      { model: Milestone, as: "milestones", required: false },
+      { model: CrewMember, as: "crew", required: false }
     ]
   });
 
@@ -59,7 +59,7 @@ export async function getStatusDetails(speedboatId) {
   // ===== STATUS HISTORY =====
   const notes = await StatusHistory.findAll({
     where: { speedboat_id: speedboatId },
-    include: [{ model: User, as: "author", attributes: ["id", "fullName"] }],
+    include: [{ model: User, as: "author", attributes: ["id", "fullName"], required: false }],
     order: [["created_at", "DESC"]],
     limit: 20
   });

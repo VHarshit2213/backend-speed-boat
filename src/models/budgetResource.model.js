@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class BudgetResource extends Model {
@@ -21,12 +21,14 @@ export default (sequelize) => {
       resources_used: { type: DataTypes.TEXT, allowNull: true },
       resources_needed: { type: DataTypes.TEXT, allowNull: true },
       notes: { type: DataTypes.TEXT, allowNull: true },
+      is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
     {
       sequelize,
       modelName: "BudgetResource",
       tableName: "budget_resources",
       timestamps: true,
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
     }
   );
 

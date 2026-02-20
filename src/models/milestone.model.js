@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class Milestone extends Model {
@@ -19,13 +19,22 @@ export default (sequelize) => {
       due_date: DataTypes.DATE,
       status: { type: DataTypes.TEXT, defaultValue: "not achieved" },
       position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+      is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
     },
-    { sequelize, modelName: "Milestone", tableName: "milestones", timestamps: true, createdAt: "created_at", updatedAt: "updated_at", }
+    {
+      sequelize,
+      modelName: "Milestone",
+      tableName: "milestones",
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
+    }
   );
 
   return Milestone;

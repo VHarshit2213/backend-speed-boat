@@ -56,9 +56,17 @@ export async function updateCrewMember(id, updates) {
 
 export async function deleteCrewMember(id) {
   const cm = await CrewMember.findByPk(id);
+  if (!cm) {
+    const err = new Error("Crew member not found");
+    err.status = 404;
+    throw err;
+  }
   if (cm) {
     const speedboatId = cm.speedboat_id;
-    await CrewMember.destroy({ where: { id } });
+
+    // soft delete
+    await CrewMember.update({ is_deleted: true }, { where: { id } });
+    // await CrewMember.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
 }

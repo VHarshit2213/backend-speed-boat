@@ -46,5 +46,13 @@ export async function updateMessage(id, updates) {
 }
 
 export async function deleteMessage(id) {
-  await Message.destroy({ where: { id } });
+  const deleted = await Message.findByPk(id);
+  if (!deleted) {
+    const err = new Error("Message not found");
+    err.status = 404;
+    throw err;
+  }
+  // soft delete
+  await Message.update({ is_deleted: true }, { where: { id } });
+  // await Message.destroy({ where: { id } });
 }

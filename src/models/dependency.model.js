@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class Dependency extends Model {
@@ -23,6 +23,7 @@ export default (sequelize) => {
       id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
       speedboat_id: { type: DataTypes.UUID, allowNull: false },
       depends_on_speedboat_id: { type: DataTypes.UUID, allowNull: false },
+      is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
     {
       sequelize,
@@ -32,6 +33,7 @@ export default (sequelize) => {
       indexes: [
         { unique: true, fields: ["speedboat_id", "depends_on_speedboat_id"] },
       ],
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
     }
   );
 

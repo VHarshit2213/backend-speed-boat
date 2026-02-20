@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class CrewMember extends Model {
@@ -23,8 +23,17 @@ export default (sequelize) => {
       slack_id: { type: DataTypes.TEXT, allowNull: true },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+      is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
-    { sequelize, modelName: "CrewMember", tableName: "crew_members", timestamps: true, createdAt: "created_at", updatedAt: "updated_at", }
+    {
+      sequelize,
+      modelName: "CrewMember",
+      tableName: "crew_members",
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
+    }
   );
 
   return CrewMember;

@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class NextAction extends Model {
@@ -27,8 +27,17 @@ export default (sequelize) => {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
+      is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
-    { sequelize, modelName: "NextAction", tableName: "next_actions", timestamps: true, createdAt: "created_at", updatedAt: "updated_at", }
+    {
+      sequelize,
+      modelName: "NextAction",
+      tableName: "next_actions",
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
+    }
   );
 
   return NextAction;

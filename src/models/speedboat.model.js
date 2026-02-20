@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
     class Speedboat extends Model {
@@ -111,7 +111,7 @@ export default (sequelize) => {
             },
             start_date: { type: DataTypes.DATE, allowNull: true },
             end_date: { type: DataTypes.DATE, allowNull: true },
-
+            is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
             created_at: {
                 type: DataTypes.DATE,
                 defaultValue: DataTypes.NOW,
@@ -133,6 +133,7 @@ export default (sequelize) => {
             timestamps: true,
             createdAt: "created_at",
             updatedAt: "updated_at",
+            defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
         }
     );
 

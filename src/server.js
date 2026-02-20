@@ -12,15 +12,16 @@ const { Speedboat, CrewMember, KPI, Milestone, NextAction, Reflection } = models
 async function updateAllSpeedboats() {
   const speedboats = await Speedboat.findAll({
     include: [
-      { model: CrewMember, as: "crew" },
-      { model: KPI, as: "kpis" },
-      { model: Milestone, as: "milestones" },
-      { model: NextAction, as: "nextActions" },
-      { model: Reflection, as: "reflections" },
+      { model: CrewMember, as: "crew", required: false },
+      { model: KPI, as: "kpis", required: false },
+      { model: Milestone, as: "milestones", required: false },
+      { model: NextAction, as: "nextActions", required: false },
+      { model: Reflection, as: "reflections", required: false },
       {
         model: Speedboat,
         as: "dependsOn",
         through: { attributes: [] },
+        required: false,
       },
     ],
   });
@@ -29,15 +30,16 @@ async function updateAllSpeedboats() {
     // Refetch with updated milestones
     const updatedSpeedboat = await Speedboat.findByPk(speedboat.id, {
       include: [
-        { model: CrewMember, as: "crew" },
-        { model: KPI, as: "kpis" },
-        { model: Milestone, as: "milestones" },
-        { model: NextAction, as: "nextActions" },
-        { model: Reflection, as: "reflections" },
+        { model: CrewMember, as: "crew", required: false },
+        { model: KPI, as: "kpis", required: false },
+        { model: Milestone, as: "milestones", required: false },
+        { model: NextAction, as: "nextActions", required: false },
+        { model: Reflection, as: "reflections", required: false },
         {
           model: Speedboat,
           as: "dependsOn",
           through: { attributes: [] },
+          required: false,
         },
       ],
     });

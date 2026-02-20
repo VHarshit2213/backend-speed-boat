@@ -83,9 +83,16 @@ export async function updateNextAction(id, updates) {
 
 export async function deleteNextAction(id) {
   const a = await NextAction.findByPk(id);
+  if (!a) {
+    const err = new Error("NextAction not found");
+    err.status = 404;
+    throw err;
+  }
   if (a) {
     const speedboatId = a.speedboat_id;
-    await NextAction.destroy({ where: { id } });
+    // soft delete
+    await NextAction.update({ is_deleted: true }, { where: { id } });
+    // await NextAction.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
 }

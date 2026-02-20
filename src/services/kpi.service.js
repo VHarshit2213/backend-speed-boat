@@ -72,9 +72,17 @@ export async function updateKPI(id, updates) {
 
 export async function deleteKPI(id) {
   const k = await KPI.findByPk(id);
+  if (!k) {
+    const err = new Error("KPI not found");
+    err.status = 404;
+    throw err;
+  }
   if (k) {
     const speedboatId = k.speedboat_id;
-    await KPI.destroy({ where: { id } });
+    //i want soft delete 
+    await KPI.update({is_deleted: true}, { where: { id } });
+    // await KPI.destroy({ where: { id } });
+    console.log('speedboatId :>> ', speedboatId);
     await touchSpeedboat(speedboatId);
     await recomputeProgress(speedboatId); // drop derived values to match new KPI set
   }

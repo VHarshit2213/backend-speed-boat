@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class KPI extends Model {
@@ -26,11 +26,20 @@ export default (sequelize) => {
       unit: DataTypes.STRING,
       position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       isCompleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+      is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 
     },
-    { sequelize, modelName: "KPI", tableName: "kpis", timestamps: true,createdAt: "created_at", updatedAt: "updated_at", }
+    {
+      sequelize,
+      modelName: "KPI",
+      tableName: "kpis",
+      timestamps: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
+    }
   );
 
   return KPI;

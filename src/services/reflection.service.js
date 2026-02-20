@@ -53,9 +53,16 @@ export async function updateReflection(id, updates) {
 
 export async function deleteReflection(id) {
   const r = await Reflection.findByPk(id);
+    if (!r) {
+    const err = new Error("Reflection not found");
+    err.status = 404;
+    throw err;
+  }
   if (r) {
     const speedboatId = r.speedboat_id;
-    await Reflection.destroy({ where: { id } });
+    // soft delete
+    await Reflection.update({ is_deleted: true }, { where: { id } });
+    // await Reflection.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
 }

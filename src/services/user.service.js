@@ -50,7 +50,8 @@ export const updateUser = async (id, payload, files, req) => {
 };
 
 
-export const deleteUser = async (id) => User.findByPk(id).then(user => user.destroy());
+export const deleteUser = async (id) => User.findByPk(id).then(user => user.update({ is_deleted: true })) // soft delete
+// export const deleteUser = async (id) => User.destroy({ where: { id } }) // hard delete;
 
 export async function listUsers({
   q,

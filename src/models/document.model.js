@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class Document extends Model {
@@ -46,12 +46,17 @@ export default (sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      is_deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       sequelize,
       modelName: "Document",
       tableName: "documents",
       timestamps: true,
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
     }
   );
 

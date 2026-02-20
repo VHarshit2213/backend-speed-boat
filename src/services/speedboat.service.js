@@ -211,15 +211,15 @@ export async function listSpeedboats({
     distinct: true,
     order: [["created_at", "DESC"]],
     include: [
-      { model: CrewMember, as: "crew" },
-      { model: KPI, as: "kpis" },
-      { model: Milestone, as: "milestones" },
-      { model: NextAction, as: "nextActions" },
-      { model: Reflection, as: "reflections" },
-      { model: Message, as: "messages" },
-      { model: BudgetResource, as: "budgetResources" },
-      { model: User, as: "sharedUsers", through: { attributes: [] } },
-      { model: Document, as: "documents" },
+      { model: CrewMember, as: "crew", required: false },
+      { model: KPI, as: "kpis", required: false },
+      { model: Milestone, as: "milestones", required: false },
+      { model: NextAction, as: "nextActions", required: false },
+      { model: Reflection, as: "reflections", required: false },
+      { model: Message, as: "messages", required: false },
+      { model: BudgetResource, as: "budgetResources", required: false },
+      { model: User, as: "sharedUsers", through: { attributes: [] }, required: false },
+      { model: Document, as: "documents", required: false },
     ],
   });
 
@@ -230,18 +230,19 @@ export async function listSpeedboats({
 export async function getSpeedboatById(id, userId) {
   const speedboat = await Speedboat.findByPk(id, {
     include: [
-      { model: CrewMember, as: "crew" },
-      { model: KPI, as: "kpis" },
-      { model: Milestone, as: "milestones" },
-      { model: NextAction, as: "nextActions" },
-      { model: Reflection, as: "reflections" },
-      { model: Message, as: "messages" },
-      { model: BudgetResource, as: "budgetResources" },
-      { model: Document, as: "documents" },
+      { model: CrewMember, as: "crew", required: false },
+      { model: KPI, as: "kpis", required: false },
+      { model: Milestone, as: "milestones", required: false },
+      { model: NextAction, as: "nextActions", required: false },
+      { model: Reflection, as: "reflections", required: false },
+      { model: Message, as: "messages", required: false },
+      { model: BudgetResource, as: "budgetResources", required: false },
+      { model: Document, as: "documents", required: false },
       {
         model: Speedboat,
         as: "dependsOn",
         through: { attributes: [] },
+        required: false,
       },
     ],
   });
@@ -279,19 +280,21 @@ export async function getSpeedboatById(id, userId) {
 }
 
 export async function getSpeedboat(id) {
+  console.log('getSpeedboat___id :>> ', id);
   const speedboat = await Speedboat.findByPk(id, {
     include: [
-      { model: CrewMember, as: "crew" },
-      { model: KPI, as: "kpis" },
-      { model: Milestone, as: "milestones" },
-      { model: NextAction, as: "nextActions" },
-      { model: Reflection, as: "reflections" },
-      { model: Message, as: "messages" },
-      { model: BudgetResource, as: "budgetResources" },
+      { model: CrewMember, as: "crew", required: false },
+      { model: KPI, as: "kpis", required: false },
+      { model: Milestone, as: "milestones", required: false },
+      { model: NextAction, as: "nextActions", required: false },
+      { model: Reflection, as: "reflections", required: false },
+      { model: Message, as: "messages", required: false },
+      { model: BudgetResource, as: "budgetResources", required: false },
       {
         model: Speedboat,
         as: "dependsOn",
         through: { attributes: [] },
+        required: false,
       },
     ],
   });
@@ -474,7 +477,10 @@ export async function deleteSpeedboat(id, userId) {
     err.status = 404;
     throw err;
   }
-  await Speedboat.destroy({ where: { id } });
+  // soft delete
+  // update the instance to avoid accidental mass-updates
+  await speedboat.update({ is_deleted: true });
+  // await Speedboat.destroy({ where: { id } });
 }
 
 /**
@@ -759,8 +765,8 @@ export async function listAccessibleSpeedboats({
     order: [["created_at", "DESC"]],
     distinct: true,
     include: [
-      { model: User, as: "owner", attributes: ["id", "fullName", "email"] },
-      { model: User, as: "sharedUsers", through: { attributes: [] } },
+      { model: User, as: "owner", attributes: ["id", "fullName", "email"], required: false },
+      { model: User, as: "sharedUsers", through: { attributes: [] }, required: false },
     ],
   });
 

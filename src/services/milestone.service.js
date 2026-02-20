@@ -63,9 +63,16 @@ export async function updateMilestone(id, updates) {
 
 export async function deleteMilestone(id) {
   const m = await Milestone.findByPk(id);
+  if (!m) {
+    const err = new Error("Milestone not found");
+    err.status = 404;
+    throw err;
+  }
   if (m) {
     const speedboatId = m.speedboat_id;
-    await Milestone.destroy({ where: { id } });
+    // soft delete
+    await Milestone.update({ is_deleted: true }, { where: { id } });
+    // await Milestone.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
 }

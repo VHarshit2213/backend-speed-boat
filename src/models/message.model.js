@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Op } from "sequelize";
 
 export default (sequelize) => {
   class Message extends Model {
@@ -18,12 +18,14 @@ export default (sequelize) => {
       sender_name: { type: DataTypes.TEXT, allowNull: true },
       sender_role: { type: DataTypes.TEXT, allowNull: true },
       message: { type: DataTypes.TEXT, allowNull: false },
+      is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
     },
     {
       sequelize,
       modelName: "Message",
       tableName: "messages",
       timestamps: true,
+      defaultScope: { where: { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] } },
     }
   );
 
