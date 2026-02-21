@@ -185,3 +185,25 @@ export const deleteDocument = async (req, res) => {
     return ApiResponse.error(res, err.message, err.status);
   }
 };
+
+// deleted speedboat List
+export const deletedSBlist = async (req, res) => {
+  try {
+    const { q, navigator, health, progressMin, progressMax, page = 1, size = 25 } = req.query;
+    const result = await speedboatService.deletedListSpeedboats({ q, navigator, health, progressMin, progressMax, page, size, userId: req.user.id });
+
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};
+
+export const deletedDocumentList = async (req, res) => {
+  try {
+    const {page = 1, size = 25 } = req.query;
+    const result = await speedboatService.deletedDocumentListSpeedboats({ page, size, userId: req.user.id });
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};

@@ -70,3 +70,20 @@ export async function deleteCrewMember(id) {
     await touchSpeedboat(speedboatId);
   }
 }
+
+export async function deletedListCrewMembers({ page = 1, limit = 25, speedboat_id }, userId) {
+ const sb = await Speedboat.findByPk(speedboat_id);
+
+  const offset = (page - 1) * limit;
+  const where = {
+    is_deleted: true
+  };
+  if (speedboat_id) where.speedboat_id = speedboat_id;
+  const { rows, count } = await CrewMember.unscoped().findAndCountAll({
+    where,
+    limit: Number(limit),
+    offset: Number(offset),
+    order: [["created_at", "DESC"]],
+  });
+  return { items: rows, total: count, page, limit };
+}

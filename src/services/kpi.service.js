@@ -146,3 +146,23 @@ export async function reorderKPIs(speedboat_id, kpi_ids = []) {
 
   return ordered;
 }
+
+export async function deletedListKPIs({ page = 1, limit = 25, speedboat_id }, userId) {
+
+  const sb = await Speedboat.findByPk(speedboat_id);
+  const offset = (page - 1) * limit;
+  const where = {
+    is_deleted : true
+  };
+  if (speedboat_id) where.speedboat_id = speedboat_id;
+  const { rows, count } = await KPI.unscoped().findAndCountAll({
+    where,
+    limit: Number(limit),
+    offset: Number(offset),
+    order: [
+      ["position", "ASC"],
+      ["created_at", "ASC"],
+    ],
+  });
+  return { items: rows, total: count, page, limit };
+}

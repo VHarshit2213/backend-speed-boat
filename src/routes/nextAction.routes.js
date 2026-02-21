@@ -9,6 +9,7 @@ const router = Router();
 router.use(requireAuth);
 router.post("/", validate(createNextActionSchema), asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));
+router.get("/deleted", asyncHandler(ctrl.deletedNextActionList));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", validate(updateNextActionSchema), asyncHandler(ctrl.update));
 router.delete("/:id", asyncHandler(ctrl.remove));

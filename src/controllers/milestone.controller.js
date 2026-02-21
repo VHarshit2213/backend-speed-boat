@@ -57,3 +57,14 @@ export const reorder = async (req, res) => {
     return ApiResponse.error(res, err.message, err.status || 500);
   }
 };
+
+
+export const deletedMilestoneList = async (req, res) => {
+  try {
+    const { page = 1, limit = 25, speedboat_id } = req.query;
+    const result = await milestoneService.deletedListMilestones({ page, limit, speedboat_id }, req.user.id);
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};

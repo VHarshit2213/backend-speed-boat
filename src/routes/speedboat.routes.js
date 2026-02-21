@@ -10,6 +10,8 @@ router.use(requireAuth);
 
 router.post("/", validate(createSpeedboatSchema), asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));
+router.get("/deleted", asyncHandler(ctrl.deletedSBlist));
+router.get("/documents-deleted", asyncHandler(ctrl.deletedDocumentList));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", validate(updateSpeedboatSchema), asyncHandler(ctrl.update));
 router.delete("/:id", asyncHandler(ctrl.remove)); 

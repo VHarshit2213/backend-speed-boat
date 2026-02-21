@@ -9,6 +9,7 @@ const router = Router();
 router.use(requireAuth);
 router.post("/", validate(createMilestoneSchema), asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));
+router.get("/deleted", asyncHandler(ctrl.deletedMilestoneList));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", validate(updateMilestoneSchema), asyncHandler(ctrl.update));
 router.delete("/:id", asyncHandler(ctrl.remove));

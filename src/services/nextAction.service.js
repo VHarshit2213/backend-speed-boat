@@ -150,3 +150,22 @@ export async function reorderNextActions(speedboat_id, next_action_ids = []) {
 
   return ordered;
 }
+
+export async function deletedListNextActions({ page = 1, limit = 25, speedboat_id }, userId) {
+
+  const offset = (page - 1) * limit;
+  const where = {
+    is_deleted: true
+  };
+  if (speedboat_id) where.speedboat_id = speedboat_id;
+  const { rows, count } = await NextAction.unscoped().findAndCountAll({
+    where,
+    limit: Number(limit),
+    offset: Number(offset),
+    order: [
+      ["position", "ASC"],
+      ["created_at", "ASC"],
+    ],
+  });
+  return { items: rows, total: count, page, limit };
+}

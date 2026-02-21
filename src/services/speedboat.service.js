@@ -827,3 +827,118 @@ export async function revokeSpeedboatAccess({
     revokedBy: adminId,
   };
 }
+
+export async function deletedListSpeedboats({
+  q,
+  navigator,
+  health,
+  progressMin,
+  progressMax,
+  page = 1,
+  size = 10,
+  userId,
+}) {
+  const offset = (page - 1) * size;
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const err = new Error("User not found");
+    err.status = 404;
+    throw err;
+  }
+  const role = user.role;
+
+  let where = {
+    is_deleted: true
+  };
+
+  if (role !== "admin") {
+    where[Op.or] = [
+      { userId }, // owned
+      {
+        id: {
+          [Op.in]: Sequelize.literal(`
+            (SELECT speedboat_id
+             FROM speedboat_access
+             WHERE user_id = ${Sequelize.escape(userId)})
+          `),
+        },
+      },
+    ];
+  }
+
+  // 🔍 Search
+  if (q) {
+    where[Op.and] = [
+      ...(where[Op.and] || []),
+      {
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${q}%` } },
+          Sequelize.literal(`
+            EXISTS (
+              SELECT 1
+              FROM unnest("Speedboat"."navigators") AS n
+              WHERE n ILIKE '%${q}%'
+            )
+          `),
+        ],
+      },
+    ];
+  }
+
+  if (health) where.health = health;
+
+  if (progressMin || progressMax) {
+    where.progress = {};
+    if (progressMin) where.progress[Op.gte] = Number(progressMin);
+    if (progressMax) where.progress[Op.lte] = Number(progressMax);
+  }
+
+  const { rows, count } = await Speedboat.unscoped().findAndCountAll({
+    where,
+    limit: Number(size),
+    offset,
+    distinct: true,
+    order: [["created_at", "DESC"]],
+    include: [
+      { model: CrewMember, as: "crew", required: false },
+      { model: KPI, as: "kpis", required: false },
+      { model: Milestone, as: "milestones", required: false },
+      { model: NextAction, as: "nextActions", required: false },
+      { model: Reflection, as: "reflections", required: false },
+      { model: Message, as: "messages", required: false },
+      { model: BudgetResource, as: "budgetResources", required: false },
+      { model: User, as: "sharedUsers", through: { attributes: [] }, required: false },
+      { model: Document, as: "documents", required: false },
+    ],
+  });
+
+
+  return { items: rows, total: count, page, size };
+}
+export async function deletedDocumentListSpeedboats({
+  page = 1,
+  size = 10,
+  userId,
+}) {
+  const offset = (page - 1) * size;
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const err = new Error("User not found");
+    err.status = 404;
+    throw err;
+  }
+
+  let where = {
+    is_deleted: true
+  };
+
+  const { rows, count } = await Document.unscoped().findAndCountAll({
+    where,
+    limit: Number(size),
+    offset,
+    distinct: true
+  });
+
+
+  return { items: rows, total: count, page, size };
+}

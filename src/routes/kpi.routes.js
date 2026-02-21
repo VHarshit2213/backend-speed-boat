@@ -10,6 +10,7 @@ router.use(requireAuth);
 
 router.post("/", validate(createKPISchema), asyncHandler(ctrl.create));
 router.get("/", asyncHandler(ctrl.list));
+router.get("/deleted", asyncHandler(ctrl.deletedKPIList));
 router.post("/reorder", validate(reorderKPISchema), asyncHandler(ctrl.reorder));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", validate(updateKPISchema), asyncHandler(ctrl.update));
