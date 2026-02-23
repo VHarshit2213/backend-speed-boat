@@ -41,7 +41,7 @@ export const update = async (req, res) => {
 
 export const remove = async (req, res) => {
   try {
-    await actionService.deleteNextAction(req.params.id);
+    await actionService.deleteNextAction(req.params.id, req.user.id);
     return ApiResponse.ok(res);
   } catch (err) {
     return ApiResponse.error(res, err.message);

@@ -8,6 +8,7 @@ export default (sequelize) => {
         as: "speedboat",
         onDelete: "CASCADE",
       });
+      KPI.belongsTo(models.User, { foreignKey: "deleted_by", as: "deletedByUser" });
     }
   }
 
@@ -27,6 +28,8 @@ export default (sequelize) => {
       position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       isCompleted: { type: DataTypes.BOOLEAN, defaultValue: false },
       is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
+      deleted_by: { type: DataTypes.UUID, allowNull: true },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 

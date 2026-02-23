@@ -32,7 +32,7 @@ export const update = async (req, res) => {
 
 export const remove = async (req, res) => {
   try {
-    await svc.deleteBudgetResource(req.params.id);
+    await svc.deleteBudgetResource(req.params.id, req.user.id);
     return ApiResponse.noContent(res);
   } catch (err) { return ApiResponse.error(res, err.message); }
 };

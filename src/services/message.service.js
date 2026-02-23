@@ -45,7 +45,7 @@ export async function updateMessage(id, updates) {
   return msg.update(updates);
 }
 
-export async function deleteMessage(id) {
+export async function deleteMessage(id, userId) {
   const deleted = await Message.findByPk(id);
   if (!deleted) {
     const err = new Error("Message not found");
@@ -53,6 +53,6 @@ export async function deleteMessage(id) {
     throw err;
   }
   // soft delete
-  await Message.update({ is_deleted: true }, { where: { id } });
+  await Message.update({ is_deleted: true, deleted_at: new Date(), deleted_by: userId }, { where: { id } });
   // await Message.destroy({ where: { id } });
 }

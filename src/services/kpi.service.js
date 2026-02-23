@@ -70,7 +70,7 @@ export async function updateKPI(id, updates) {
   return k;
 }
 
-export async function deleteKPI(id) {
+export async function deleteKPI(id, userId) {
   const k = await KPI.findByPk(id);
   if (!k) {
     const err = new Error("KPI not found");
@@ -79,8 +79,8 @@ export async function deleteKPI(id) {
   }
   if (k) {
     const speedboatId = k.speedboat_id;
-    //i want soft delete 
-    await KPI.update({is_deleted: true}, { where: { id } });
+    // soft delete
+    await KPI.update({ is_deleted: true, deleted_at: new Date(), deleted_by: userId }, { where: { id } });
     // await KPI.destroy({ where: { id } });
     console.log('speedboatId :>> ', speedboatId);
     await touchSpeedboat(speedboatId);
@@ -152,7 +152,7 @@ export async function deletedListKPIs({ page = 1, limit = 25, speedboat_id }, us
   const sb = await Speedboat.findByPk(speedboat_id);
   const offset = (page - 1) * limit;
   const where = {
-    is_deleted : true
+    is_deleted: true
   };
   if (speedboat_id) where.speedboat_id = speedboat_id;
   const { rows, count } = await KPI.unscoped().findAndCountAll({
@@ -163,6 +163,10 @@ export async function deletedListKPIs({ page = 1, limit = 25, speedboat_id }, us
       ["position", "ASC"],
       ["created_at", "ASC"],
     ],
+    include: [
+      { model: models.User, as: "deletedByUser", attributes: ["id", "fullName", "email", "profileImage", "role"] },
+      { model: Speedboat, as: "speedboat", attributes: ["name"] }
+    ]
   });
   return { items: rows, total: count, page, limit };
 }

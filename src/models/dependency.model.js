@@ -15,6 +15,7 @@ export default (sequelize) => {
         as: "dependsOnSpeedboat",
         onDelete: "CASCADE"
       });
+      Dependency.belongsTo(models.User, { foreignKey: "deleted_by", as: "deletedByUser" });
     }
   }
 
@@ -24,6 +25,8 @@ export default (sequelize) => {
       speedboat_id: { type: DataTypes.UUID, allowNull: false },
       depends_on_speedboat_id: { type: DataTypes.UUID, allowNull: false },
       is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
+      deleted_by: { type: DataTypes.UUID, allowNull: true },
     },
     {
       sequelize,

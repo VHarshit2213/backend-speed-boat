@@ -57,7 +57,7 @@ export async function getDependencyById(id) {
   return Dependency.findByPk(id);
 }
 
-export async function deleteDependency(id) {
+export async function deleteDependency(id, userId) {
   const deleted = await Dependency.findByPk(id);
   if (!deleted) {
     const err = new Error("Dependency not found");
@@ -65,6 +65,6 @@ export async function deleteDependency(id) {
     throw err;
   }
   //soft delete
-  await Dependency.update({ is_deleted: true }, { where: { id } });
+  await Dependency.update({ is_deleted: true, deleted_at: new Date(), deleted_by: userId }, { where: { id } });
   // await Dependency.destroy({ where: { id } });
 }

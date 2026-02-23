@@ -8,6 +8,7 @@ export default (sequelize) => {
         as: "speedboat",
         onDelete: "CASCADE",
       });
+      BudgetResource.belongsTo(models.User, { foreignKey: "deleted_by", as: "deletedByUser" });
     }
   }
 
@@ -22,6 +23,8 @@ export default (sequelize) => {
       resources_needed: { type: DataTypes.TEXT, allowNull: true },
       notes: { type: DataTypes.TEXT, allowNull: true },
       is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
+      deleted_by: { type: DataTypes.UUID, allowNull: true },
     },
     {
       sequelize,

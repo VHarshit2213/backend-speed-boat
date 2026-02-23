@@ -477,9 +477,14 @@ export async function deleteSpeedboat(id, userId) {
     err.status = 404;
     throw err;
   }
+  const payload = {
+    is_deleted: true,
+    deleted_at: new Date(),
+    deleted_by: userId,
+  };
   // soft delete
   // update the instance to avoid accidental mass-updates
-  await speedboat.update({ is_deleted: true });
+  await speedboat.update(payload);
   // await Speedboat.destroy({ where: { id } });
 }
 
@@ -909,6 +914,8 @@ export async function deletedListSpeedboats({
       { model: BudgetResource, as: "budgetResources", required: false },
       { model: User, as: "sharedUsers", through: { attributes: [] }, required: false },
       { model: Document, as: "documents", required: false },
+      // Include deletedByUser details
+      { model: User, as: "deletedByUser", required: false, attributes: ["id", "fullName", "email", "profileImage", "role"] },
     ],
   });
 
@@ -936,7 +943,11 @@ export async function deletedDocumentListSpeedboats({
     where,
     limit: Number(size),
     offset,
-    distinct: true
+    distinct: true,
+    include: [
+      { model: User, as: "deletedByUser", required: false, attributes: ["id", "fullName", "email", "profileImage", "role"] },
+      { model: Speedboat, as: "speedboat", required: false, attributes: ["name"] },
+    ],
   });
 
 

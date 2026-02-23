@@ -25,7 +25,7 @@ export const getById = async (req, res) => {
 
 export const remove = async (req, res) => {
   try {
-    await svc.deleteMessage(req.params.id);
+    await svc.deleteMessage(req.params.id, req.user.id);
     return ApiResponse.noContent(res);
   } catch (err) { return ApiResponse.error(res, err.message); }
 };

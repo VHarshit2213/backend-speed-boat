@@ -75,6 +75,8 @@ export default (sequelize) => {
             });
 
             Speedboat.belongsTo(models.User, { foreignKey: "userId", as: "owner" });
+            // Association for deleted_by user
+            Speedboat.belongsTo(models.User, { foreignKey: "deleted_by", as: "deletedByUser" });
         }
     }
 
@@ -112,6 +114,8 @@ export default (sequelize) => {
             start_date: { type: DataTypes.DATE, allowNull: true },
             end_date: { type: DataTypes.DATE, allowNull: true },
             is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+            deleted_at: { type: DataTypes.DATE, allowNull: true },
+            deleted_by: { type: DataTypes.UUID, allowNull: true },
             created_at: {
                 type: DataTypes.DATE,
                 defaultValue: DataTypes.NOW,

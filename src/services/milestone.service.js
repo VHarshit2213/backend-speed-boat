@@ -61,7 +61,7 @@ export async function updateMilestone(id, updates) {
   return m;
 }
 
-export async function deleteMilestone(id) {
+export async function deleteMilestone(id, userId) {
   const m = await Milestone.findByPk(id);
   if (!m) {
     const err = new Error("Milestone not found");
@@ -71,7 +71,7 @@ export async function deleteMilestone(id) {
   if (m) {
     const speedboatId = m.speedboat_id;
     // soft delete
-    await Milestone.update({ is_deleted: true }, { where: { id } });
+    await Milestone.update({ is_deleted: true, deleted_at: new Date(), deleted_by: userId }, { where: { id } });
     // await Milestone.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
@@ -161,6 +161,10 @@ export async function deletedListMilestones({ page = 1, limit = 25, speedboat_id
       ["position", "ASC"],
       ["created_at", "ASC"],
     ],
+    include: [
+      { model: models.User, as: "deletedByUser", attributes: ["id", "fullName", "email", "profileImage", "role"] },
+      { model: Speedboat, as: "speedboat", attributes: ["name"] }
+    ]
   });
   return { items: rows, total: count, page, limit };
 }

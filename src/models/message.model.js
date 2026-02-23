@@ -8,6 +8,7 @@ export default (sequelize) => {
         as: "speedboat",
         onDelete: "CASCADE",
       });
+      Message.belongsTo(models.User, { foreignKey: "deleted_by", as: "deletedByUser" });
     }
   }
 
@@ -19,6 +20,8 @@ export default (sequelize) => {
       sender_role: { type: DataTypes.TEXT, allowNull: true },
       message: { type: DataTypes.TEXT, allowNull: false },
       is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
+      deleted_by: { type: DataTypes.UUID, allowNull: true },
     },
     {
       sequelize,

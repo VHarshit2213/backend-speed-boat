@@ -81,7 +81,7 @@ export async function updateNextAction(id, updates) {
   return a;
 }
 
-export async function deleteNextAction(id) {
+export async function deleteNextAction(id, userId) {
   const a = await NextAction.findByPk(id);
   if (!a) {
     const err = new Error("NextAction not found");
@@ -91,7 +91,7 @@ export async function deleteNextAction(id) {
   if (a) {
     const speedboatId = a.speedboat_id;
     // soft delete
-    await NextAction.update({ is_deleted: true }, { where: { id } });
+    await NextAction.update({ is_deleted: true, deleted_at: new Date(), deleted_by: userId }, { where: { id } });
     // await NextAction.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
@@ -166,6 +166,10 @@ export async function deletedListNextActions({ page = 1, limit = 25, speedboat_i
       ["position", "ASC"],
       ["created_at", "ASC"],
     ],
+    include: [
+      { model: models.User, as: "deletedByUser", attributes: ["id", "fullName", "email", "profileImage", "role"] },
+      { model: Speedboat, as: "speedboat", attributes: ["name"] }
+    ]
   });
   return { items: rows, total: count, page, limit };
 }

@@ -8,6 +8,7 @@ export default (sequelize) => {
         as: "speedboat",
         onDelete: "CASCADE",
       });
+      Milestone.belongsTo(models.User, { foreignKey: "deleted_by", as: "deletedByUser" });
     }
   }
 
@@ -20,6 +21,8 @@ export default (sequelize) => {
       status: { type: DataTypes.TEXT, defaultValue: "not achieved" },
       position: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
+      deleted_at: { type: DataTypes.DATE, allowNull: true },
+      deleted_by: { type: DataTypes.UUID, allowNull: true },
       created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
       updated_at: {
         type: DataTypes.DATE,

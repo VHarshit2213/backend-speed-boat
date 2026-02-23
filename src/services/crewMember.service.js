@@ -54,7 +54,7 @@ export async function updateCrewMember(id, updates) {
   return cm;
 }
 
-export async function deleteCrewMember(id) {
+export async function deleteCrewMember(id, userId) {
   const cm = await CrewMember.findByPk(id);
   if (!cm) {
     const err = new Error("Crew member not found");
@@ -63,9 +63,8 @@ export async function deleteCrewMember(id) {
   }
   if (cm) {
     const speedboatId = cm.speedboat_id;
-
     // soft delete
-    await CrewMember.update({ is_deleted: true }, { where: { id } });
+    await CrewMember.update({ is_deleted: true, deleted_at: new Date(), deleted_by: userId }, { where: { id } });
     // await CrewMember.destroy({ where: { id } });
     await touchSpeedboat(speedboatId);
   }
@@ -84,6 +83,10 @@ export async function deletedListCrewMembers({ page = 1, limit = 25, speedboat_i
     limit: Number(limit),
     offset: Number(offset),
     order: [["created_at", "DESC"]],
+    include: [
+      { model: models.User, as: "deletedByUser", attributes: ["id", "fullName", "email", "profileImage", "role"] },
+      { model: Speedboat, as: "speedboat", attributes: ["name"] }
+    ]
   });
   return { items: rows, total: count, page, limit };
 }

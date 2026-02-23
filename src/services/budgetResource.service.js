@@ -40,8 +40,8 @@ export async function updateBudgetResource(id, updates) {
   return br;
 }
 
-export async function deleteBudgetResource(id) {
+export async function deleteBudgetResource(id, userId) {
   const deleted = await BudgetResource.findByPk(id);
   if (!deleted) { const err = new Error("Entry not found"); err.status = 404; throw err; }
-  await BudgetResource.update({ is_deleted: true }, { where: { id } });
+  await BudgetResource.update({ is_deleted: true, deleted_at: new Date(), deleted_by: userId }, { where: { id } });
 }

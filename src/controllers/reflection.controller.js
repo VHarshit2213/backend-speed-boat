@@ -41,7 +41,7 @@ export const update = async (req, res) => {
 
 export const remove = async (req, res) => {
   try {
-    await reflectionService.deleteReflection(req.params.id);
+    await reflectionService.deleteReflection(req.params.id, req.user.id);
     return ApiResponse.ok(res);
   } catch (err) {
     return ApiResponse.error(res, err.message);
