@@ -45,4 +45,6 @@ router.delete(
   asyncHandler(ctrl.deleteDocument)
 );
 
+router.post("/documents/:documentId/restore", asyncHandler(ctrl.restoreDoc));
+
 export default router;

@@ -704,7 +704,7 @@ export async function deleteDocument(documentId, user) {
     throw err;
   }
 
-  await document.destroy();
+  await document.update({ is_deleted: true, deleted_at: new Date(), deleted_by: user.id }, { where: { documentId } });
 
   // Update legacy files array
   const existing = Array.isArray(speedboat.files) ? speedboat.files : [];
@@ -1049,4 +1049,24 @@ export async function deletedDocumentListSpeedboats({
 
 
   return { items: rows, total: count, page, size };
+}
+
+
+export async function restoreDocument(id, userId) {
+  const document = await Document.unscoped().findByPk(id);
+  console.log("document", document)
+  if (!document || !document.is_deleted) {
+    const err = new Error("Deleted document not found");
+    err.status = 404;
+    throw err;
+  }
+
+  await document.update({
+    is_deleted: false,
+    deleted_at: null,
+    deleted_by: null,
+  });
+
+  await touchSpeedboat(document.speedboat_id);
+  return document;
 }

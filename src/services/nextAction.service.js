@@ -59,7 +59,7 @@ export async function listNextActions({ page = 1, limit = 25, speedboat_id }, us
       ["created_at", "ASC"],
     ],
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size:limit };
 }
 
 export async function getNextActionById(id) {
@@ -171,5 +171,23 @@ export async function deletedListNextActions({ page = 1, limit = 25, speedboat_i
       { model: Speedboat, as: "speedboat", attributes: ["name"] }
     ]
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size:limit };
+}
+
+export async function restoreNextAction(id, userId) {
+  const nextAction = await NextAction.unscoped().findByPk(id);
+  if (!nextAction || !nextAction.is_deleted) {
+    const err = new Error("Deleted nextAction not found");
+    err.status = 404;
+    throw err;
+  }
+
+  await nextAction.update({
+    is_deleted: false,
+    deleted_at: null,
+    deleted_by: null,
+  });
+
+  await touchSpeedboat(nextAction.speedboat_id);
+  return nextAction;
 }
