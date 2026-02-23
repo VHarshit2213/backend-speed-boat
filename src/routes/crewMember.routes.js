@@ -13,5 +13,6 @@ router.get("/deleted", asyncHandler(ctrl.deletedCrewList));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", validate(updateCrewMemberSchema), asyncHandler(ctrl.update));
 router.delete("/:id", asyncHandler(ctrl.remove));
+router.post("/:id/restore", asyncHandler(ctrl.restore));
 
 export default router;

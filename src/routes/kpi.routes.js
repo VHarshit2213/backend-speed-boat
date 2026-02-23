@@ -15,5 +15,6 @@ router.post("/reorder", validate(reorderKPISchema), asyncHandler(ctrl.reorder));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", validate(updateKPISchema), asyncHandler(ctrl.update));
 router.delete("/:id", asyncHandler(ctrl.remove));
+router.post("/:id/restore", asyncHandler(ctrl.restore));
 
 export default router;

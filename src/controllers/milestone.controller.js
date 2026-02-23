@@ -68,3 +68,12 @@ export const deletedMilestoneList = async (req, res) => {
     return ApiResponse.error(res, err.message);
   }
 };
+
+export const restore = async (req, res) => {
+  try {
+    const item = await milestoneService.restoreMilestone(req.params.id, req.user.id);
+    return ApiResponse.ok(res, item);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};

@@ -35,7 +35,7 @@ export async function listCrewMembers({ page = 1, limit = 25, speedboat_id }, us
     offset: Number(offset),
     order: [["created_at", "DESC"]],
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size:limit };
 }
 
 export async function getCrewMemberById(id) {
@@ -88,5 +88,23 @@ export async function deletedListCrewMembers({ page = 1, limit = 25, speedboat_i
       { model: Speedboat, as: "speedboat", attributes: ["name"] }
     ]
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size :limit };
+}
+
+export async function restoreCrewMember(id, userId) {
+  const cm = await CrewMember.unscoped().findByPk(id);
+  if (!cm || !cm.is_deleted) {
+    const err = new Error("Deleted crew member not found");
+    err.status = 404;
+    throw err;
+  }
+
+  await cm.update({
+    is_deleted: false,
+    deleted_at: null,
+    deleted_by: null,
+  });
+
+  await touchSpeedboat(cm.speedboat_id);
+  return cm;
 }

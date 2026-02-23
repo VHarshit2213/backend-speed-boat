@@ -207,3 +207,13 @@ export const deletedDocumentList = async (req, res) => {
     return ApiResponse.error(res, err.message);
   }
 };
+
+// Restore
+export const restore = async (req, res) => {
+  try {
+    const result = await speedboatService.restoreSpeedboat(req.params.id, req.user.id);
+    return ApiResponse.ok(res, result);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};

@@ -50,7 +50,7 @@ export async function listKPIs({ page = 1, limit = 25, speedboat_id }, userId) {
       ["created_at", "ASC"],
     ],
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size:limit };
 }
 
 export async function getKPIById(id) {
@@ -168,5 +168,23 @@ export async function deletedListKPIs({ page = 1, limit = 25, speedboat_id }, us
       { model: Speedboat, as: "speedboat", attributes: ["name"] }
     ]
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size:limit };
+}
+
+export async function restoreKPIs(id, userId) {
+  const kpis = await KPI.unscoped().findByPk(id);
+  if (!kpis || !kpis.is_deleted) {
+    const err = new Error("Deleted kpis not found");
+    err.status = 404;
+    throw err;
+  }
+
+  await kpis.update({
+    is_deleted: false,
+    deleted_at: null,
+    deleted_by: null,
+  });
+
+  await touchSpeedboat(kpis.speedboat_id);
+  return kpis;
 }

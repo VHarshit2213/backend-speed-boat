@@ -471,21 +471,118 @@ export async function updateSpeedboat(id, updates, userId) {
 }
 
 export async function deleteSpeedboat(id, userId) {
-  const speedboat = await Speedboat.findByPk(id);
-  if (!speedboat || speedboat.userId !== userId) {
-    const err = new Error("Speedboat not found or not owned by you");
-    err.status = 404;
-    throw err;
+  const transaction = await models.sequelize.transaction();
+  try {
+    const speedboat = await Speedboat.unscoped().findByPk(id, { transaction });
+    if (!speedboat || speedboat.userId !== userId) {
+      const err = new Error("Speedboat not found or not owned by you");
+      err.status = 404;
+      throw err;
+    }
+
+    if (speedboat.is_deleted) {
+      await transaction.commit();
+      return;
+    }
+
+    const deletedAt = new Date();
+    const payload = {
+      is_deleted: true,
+      deleted_at: deletedAt,
+      deleted_by: userId,
+    };
+    const onlyActive = { [Op.or]: [{ is_deleted: false }, { is_deleted: null }] };
+
+    await Promise.all([
+      speedboat.update(payload, { transaction }),
+      CrewMember.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      KPI.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      Milestone.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      NextAction.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      Reflection.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      Message.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      BudgetResource.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      Document.unscoped().update(payload, { where: { speedboat_id: id, ...onlyActive }, transaction }),
+      Dependency.unscoped().update(payload, {
+        where: {
+          ...onlyActive,
+          [Op.or]: [{ speedboat_id: id }, { depends_on_speedboat_id: id }],
+        },
+        transaction,
+      }),
+    ]);
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
   }
-  const payload = {
-    is_deleted: true,
-    deleted_at: new Date(),
-    deleted_by: userId,
-  };
-  // soft delete
-  // update the instance to avoid accidental mass-updates
-  await speedboat.update(payload);
-  // await Speedboat.destroy({ where: { id } });
+}
+
+export async function restoreSpeedboat(id, userId) {
+  const transaction = await models.sequelize.transaction();
+  try {
+    const speedboat = await Speedboat.unscoped().findByPk(id, { transaction });
+    if (!speedboat || !speedboat.is_deleted) {
+      const err = new Error("Deleted speedboat not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const user = await User.findByPk(userId, { transaction });
+    if (!user) {
+      const err = new Error("User not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const isOwner = speedboat.userId === userId;
+    const isAdmin = user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      const err = new Error("You do not have permission to restore this speedboat");
+      err.status = 403;
+      throw err;
+    }
+
+    const cascadeDeletedAt = speedboat.deleted_at;
+    const cascadeDeletedBy = speedboat.deleted_by;
+    const restorePayload = {
+      is_deleted: false,
+      deleted_at: null,
+      deleted_by: null,
+    };
+    const cascadeWhere = {
+      is_deleted: true,
+      deleted_at: cascadeDeletedAt,
+      deleted_by: cascadeDeletedBy,
+    };
+
+    await Promise.all([
+      speedboat.update(restorePayload, { transaction }),
+      CrewMember.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      KPI.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      Milestone.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      NextAction.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      Reflection.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      Message.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      BudgetResource.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      Document.unscoped().update(restorePayload, { where: { speedboat_id: id, ...cascadeWhere }, transaction }),
+      Dependency.unscoped().update(restorePayload, {
+        where: {
+          ...cascadeWhere,
+          [Op.or]: [{ speedboat_id: id }, { depends_on_speedboat_id: id }],
+        },
+        transaction,
+      }),
+    ]);
+
+    await transaction.commit();
+    return getSpeedboatById(id, userId);
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 }
 
 /**
@@ -905,15 +1002,15 @@ export async function deletedListSpeedboats({
     distinct: true,
     order: [["created_at", "DESC"]],
     include: [
-      { model: CrewMember, as: "crew", required: false },
-      { model: KPI, as: "kpis", required: false },
-      { model: Milestone, as: "milestones", required: false },
-      { model: NextAction, as: "nextActions", required: false },
-      { model: Reflection, as: "reflections", required: false },
-      { model: Message, as: "messages", required: false },
-      { model: BudgetResource, as: "budgetResources", required: false },
+      { model: CrewMember.unscoped(), as: "crew", required: false },
+      { model: KPI.unscoped(), as: "kpis", required: false },
+      { model: Milestone.unscoped(), as: "milestones", required: false },
+      { model: NextAction.unscoped(), as: "nextActions", required: false },
+      { model: Reflection.unscoped(), as: "reflections", required: false },
+      { model: Message.unscoped(), as: "messages", required: false },
+      { model: BudgetResource.unscoped(), as: "budgetResources", required: false },
       { model: User, as: "sharedUsers", through: { attributes: [] }, required: false },
-      { model: Document, as: "documents", required: false },
+      { model: Document.unscoped(), as: "documents", required: false },
       // Include deletedByUser details
       { model: User, as: "deletedByUser", required: false, attributes: ["id", "fullName", "email", "profileImage", "role"] },
     ],

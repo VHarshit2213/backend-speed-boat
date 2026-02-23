@@ -48,6 +48,15 @@ export const remove = async (req, res) => {
   }
 };
 
+export const restore = async (req, res) => {
+  try {
+    const item = await crewService.restoreCrewMember(req.params.id, req.user.id);
+    return ApiResponse.ok(res, item);
+  } catch (err) {
+    return ApiResponse.error(res, err.message);
+  }
+};
+
 
 export const deletedCrewList = async (req, res) => {
   try {

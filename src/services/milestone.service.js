@@ -40,7 +40,7 @@ export async function listMilestones({ page = 1, limit = 25, speedboat_id }, use
       ["created_at", "ASC"],
     ],
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size:limit };
 }
 
 export async function getMilestoneById(id) {
@@ -166,5 +166,23 @@ export async function deletedListMilestones({ page = 1, limit = 25, speedboat_id
       { model: Speedboat, as: "speedboat", attributes: ["name"] }
     ]
   });
-  return { items: rows, total: count, page, limit };
+  return { items: rows, total: count, page, size:limit };
+}
+
+export async function restoreMilestone(id, userId) {
+  const milestone = await Milestone.unscoped().findByPk(id);
+  if (!milestone || !milestone.is_deleted) {
+    const err = new Error("Deleted milestone not found");
+    err.status = 404;
+    throw err;
+  }
+
+  await milestone.update({
+    is_deleted: false,
+    deleted_at: null,
+    deleted_by: null,
+  });
+
+  await touchSpeedboat(milestone.speedboat_id);
+  return milestone;
 }

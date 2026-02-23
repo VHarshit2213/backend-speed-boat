@@ -15,6 +15,7 @@ router.get("/documents-deleted", asyncHandler(ctrl.deletedDocumentList));
 router.get("/:id", asyncHandler(ctrl.getById));
 router.put("/:id", validate(updateSpeedboatSchema), asyncHandler(ctrl.update));
 router.delete("/:id", asyncHandler(ctrl.remove)); 
+router.post("/:id/restore", asyncHandler(ctrl.restore));
 router.post(
   "/share/:id", asyncHandler(ctrl.bulkShareSpeedboat)
 );
