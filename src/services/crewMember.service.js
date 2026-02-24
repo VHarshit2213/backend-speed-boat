@@ -82,7 +82,7 @@ export async function deletedListCrewMembers({ page = 1, size = 25, speedboat_id
     where,
     limit: Number(size),
     offset: Number(offset),
-    order: [["created_at", "DESC"]],
+    order: [["deleted_at", "DESC"]],
     include: [
       { model: models.User, as: "deletedByUser", attributes: ["id", "fullName", "email", "profileImage", "role"] },
       { model: Speedboat, as: "speedboat", attributes: ["name"] }

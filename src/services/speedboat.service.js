@@ -1018,7 +1018,7 @@ export async function deletedListSpeedboats({
     limit: Number(size),
     offset,
     distinct: true,
-    order: [["created_at", "DESC"]],
+    order: [["deleted_at", "DESC"]],
     include: [
       { model: CrewMember.unscoped(), as: "crew", required: false },
       { model: KPI.unscoped(), as: "kpis", required: false },
@@ -1059,6 +1059,7 @@ export async function deletedDocumentListSpeedboats({
     limit: Number(size),
     offset,
     distinct: true,
+    order: [["deleted_at", "DESC"]],
     include: [
       { model: User, as: "deletedByUser", required: false, attributes: ["id", "fullName", "email", "profileImage", "role"] },
       { model: Speedboat, as: "speedboat", required: false, attributes: ["name"] },

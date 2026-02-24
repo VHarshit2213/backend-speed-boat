@@ -163,8 +163,7 @@ export async function deletedListNextActions({ page = 1, size = 25, speedboat_id
     limit: Number(size),
     offset: Number(offset),
     order: [
-      ["position", "ASC"],
-      ["created_at", "ASC"],
+      ["deleted_at", "DESC"],
     ],
     include: [
       { model: models.User, as: "deletedByUser", attributes: ["id", "fullName", "email", "profileImage", "role"] },
