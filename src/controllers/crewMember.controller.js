@@ -12,8 +12,8 @@ export const create = async (req, res) => {
 
 export const list = async (req, res) => {
   try {
-    const { page = 1, limit = 25, speedboat_id } = req.query;
-    const result = await crewService.listCrewMembers({ page, limit, speedboat_id }, req.user.id);
+    const { page = 1, size = 25, speedboat_id } = req.query;
+    const result = await crewService.listCrewMembers({ page, size, speedboat_id }, req.user.id);
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -60,8 +60,8 @@ export const restore = async (req, res) => {
 
 export const deletedCrewList = async (req, res) => {
   try {
-    const { page = 1, limit = 25, speedboat_id } = req.query;
-    const result = await crewService.deletedListCrewMembers({ page, limit, speedboat_id }, req.user.id);
+    const { page = 1, size = 25, speedboat_id } = req.query;
+    const result = await crewService.deletedListCrewMembers({ page, size, speedboat_id }, req.user.id);
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);

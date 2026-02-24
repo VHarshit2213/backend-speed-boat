@@ -196,6 +196,20 @@ export async function listSpeedboats({
     ];
   }
 
+  // Filter by navigator (case-insensitive contains match on array items)
+  if (navigator) {
+    where[Op.and] = [
+      ...(where[Op.and] || []),
+      Sequelize.literal(`
+        EXISTS (
+          SELECT 1
+          FROM unnest("Speedboat"."navigators") AS n
+          WHERE n ILIKE '%${navigator}%'
+        )
+      `),
+    ];
+  }
+
   if (health) where.health = health;
 
   if (progressMin || progressMax) {
@@ -711,6 +725,9 @@ export async function deleteDocument(documentId, user) {
   speedboat.files = existing.filter((f) => f?.id !== document.id && f?.fileName !== document.file_name);
   await speedboat.save();
 
+  // Soft delete only: keep file on disk so URLs remain valid for restore
+  // If you want hard delete, uncomment below.
+  /*
   // Attempt to delete from disk; ignore errors (e.g., file already gone)
   if (document.path) {
     const absolute = path.isAbsolute(document.path)
@@ -722,6 +739,7 @@ export async function deleteDocument(documentId, user) {
       // swallow file removal errors to avoid blocking API
     }
   }
+  */
 
   return { deleted: true };
 }

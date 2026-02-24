@@ -21,26 +21,26 @@ export async function createMilestone({ speedboat_id, title, due_date, status, p
   return m;
 }
 
-export async function listMilestones({ page = 1, limit = 25, speedboat_id }, userId) {
+export async function listMilestones({ page = 1, size = 25, speedboat_id }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
   // if (!sb || sb.userId !== userId) {
   //   const err = new Error("Speedboat not found or not owned by you");
   //   err.status = 404;
   //   throw err;
   // }
-  const offset = (page - 1) * limit;
+  const offset = (page - 1) * size;
   const where = {};
   if (speedboat_id) where.speedboat_id = speedboat_id;
   const { rows, count } = await Milestone.findAndCountAll({
     where,
-    limit: Number(limit),
+    limit: Number(size),
     offset: Number(offset),
     order: [
       ["position", "ASC"],
       ["created_at", "ASC"],
     ],
   });
-  return { items: rows, total: count, page, size:limit };
+  return { items: rows, total: count, page, size };
 }
 
 export async function getMilestoneById(id) {
@@ -146,16 +146,16 @@ export async function computeMilestoneStatus(milestone) {
 }
 
 
-export async function deletedListMilestones({ page = 1, limit = 25, speedboat_id }, userId) {
+export async function deletedListMilestones({ page = 1, size = 25, speedboat_id }, userId) {
   const sb = await Speedboat.findByPk(speedboat_id);
-  const offset = (page - 1) * limit;
+  const offset = (page - 1) * size;
   const where = {
     is_deleted: true
   };
   if (speedboat_id) where.speedboat_id = speedboat_id;
   const { rows, count } = await Milestone.unscoped().findAndCountAll({
     where,
-    limit: Number(limit),
+    limit: Number(size),
     offset: Number(offset),
     order: [
       ["position", "ASC"],
@@ -166,7 +166,7 @@ export async function deletedListMilestones({ page = 1, limit = 25, speedboat_id
       { model: Speedboat, as: "speedboat", attributes: ["name"] }
     ]
   });
-  return { items: rows, total: count, page, size:limit };
+  return { items: rows, total: count, page, size };
 }
 
 export async function restoreMilestone(id, userId) {

@@ -30,7 +30,7 @@ export async function createKPI({ speedboat_id, name, baseline, target, current,
   return kpi;
 }
 
-export async function listKPIs({ page = 1, limit = 25, speedboat_id }, userId) {
+export async function listKPIs({ page = 1, size = 25, speedboat_id }, userId) {
 
   const sb = await Speedboat.findByPk(speedboat_id);
   // if (!sb || sb.userId !== userId) {
@@ -38,19 +38,19 @@ export async function listKPIs({ page = 1, limit = 25, speedboat_id }, userId) {
   //   err.status = 404;
   //   throw err;
   // }
-  const offset = (page - 1) * limit;
+  const offset = (page - 1) * size;
   const where = {};
   if (speedboat_id) where.speedboat_id = speedboat_id;
   const { rows, count } = await KPI.findAndCountAll({
     where,
-    limit: Number(limit),
+    limit: Number(size),
     offset: Number(offset),
     order: [
       ["position", "ASC"],
       ["created_at", "ASC"],
     ],
   });
-  return { items: rows, total: count, page, size:limit };
+  return { items: rows, total: count, page, size };
 }
 
 export async function getKPIById(id) {
@@ -147,17 +147,17 @@ export async function reorderKPIs(speedboat_id, kpi_ids = []) {
   return ordered;
 }
 
-export async function deletedListKPIs({ page = 1, limit = 25, speedboat_id }, userId) {
+export async function deletedListKPIs({ page = 1, size = 25, speedboat_id }, userId) {
 
   const sb = await Speedboat.findByPk(speedboat_id);
-  const offset = (page - 1) * limit;
+  const offset = (page - 1) * size;
   const where = {
     is_deleted: true
   };
   if (speedboat_id) where.speedboat_id = speedboat_id;
   const { rows, count } = await KPI.unscoped().findAndCountAll({
     where,
-    limit: Number(limit),
+    limit: Number(size),
     offset: Number(offset),
     order: [
       ["position", "ASC"],
@@ -168,7 +168,7 @@ export async function deletedListKPIs({ page = 1, limit = 25, speedboat_id }, us
       { model: Speedboat, as: "speedboat", attributes: ["name"] }
     ]
   });
-  return { items: rows, total: count, page, size:limit };
+  return { items: rows, total: count, page, size };
 }
 
 export async function restoreKPIs(id, userId) {

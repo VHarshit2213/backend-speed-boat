@@ -12,8 +12,8 @@ export const create = async (req, res) => {
 
 export const list = async (req, res) => {
   try {
-    const { page = 1, limit = 25, speedboat_id } = req.query;
-    const result = await kpiService.listKPIs({ page, limit, speedboat_id }, req.user.id);
+    const { page = 1, size = 25, speedboat_id } = req.query;
+    const result = await kpiService.listKPIs({ page, size, speedboat_id }, req.user.id);
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
@@ -61,8 +61,8 @@ export const reorder = async (req, res) => {
 
 export const deletedKPIList = async (req, res) => {
   try {
-    const { page = 1, limit = 25, speedboat_id } = req.query;
-    const result = await kpiService.deletedListKPIs({ page, limit, speedboat_id }, req.user.id);
+    const { page = 1, size = 25, speedboat_id } = req.query;
+    const result = await kpiService.deletedListKPIs({ page, size, speedboat_id }, req.user.id);
     return ApiResponse.ok(res, result);
   } catch (err) {
     return ApiResponse.error(res, err.message);
