@@ -1067,7 +1067,7 @@ export async function deletedDocumentListSpeedboats({
     order: [["deleted_at", "DESC"]],
     include: [
       { model: User, as: "deletedByUser", required: false, attributes: ["id", "fullName", "email", "profileImage", "role"] },
-      { model: Speedboat, as: "speedboat", required: false, attributes: ["name"] },
+      { model: Speedboat, as: "speedboat", attributes: ["name"] },
     ],
   });
 
