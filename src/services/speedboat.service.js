@@ -163,16 +163,21 @@ export async function listSpeedboats({
   let where = {};
 
   if (role !== "admin") {
-    where[Op.or] = [
-      { userId }, // owned
+    where[Op.and] = [
+      ...(where[Op.and] || []),
       {
-        id: {
-          [Op.in]: Sequelize.literal(`
-            (SELECT speedboat_id
-             FROM speedboat_access
-             WHERE user_id = '${userId}')
-          `),
-        },
+        [Op.or]: [
+          { userId }, // owned
+          {
+            id: {
+              [Op.in]: Sequelize.literal(`
+              (SELECT speedboat_id
+              FROM speedboat_access
+              WHERE user_id = ${models.sequelize.escape(userId)})
+              `),
+            },
+          },
+        ],
       },
     ];
   }
@@ -979,7 +984,7 @@ export async function deletedListSpeedboats({
           [Op.in]: Sequelize.literal(`
             (SELECT speedboat_id
              FROM speedboat_access
-             WHERE user_id = ${Sequelize.escape(userId)})
+             WHERE user_id = ${models.sequelize.escape(userId)})
           `),
         },
       },
